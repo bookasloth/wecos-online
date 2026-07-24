@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Container } from "@/components/layout/container";
+import { Modal } from "@/components/ui/modal";
 import { startups } from "@/lib/sample/sample-data";
 
 const SORTS = ["Trending", "Newest", "Most discussed", "Featured"] as const;
@@ -47,6 +48,12 @@ const [emailError, setEmailError] = useState("");
 
 const validateEmail = (email: string) => {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+const closeEnquiry = () => {
+  setShowEnquiryModal(false);
+  setEmail("");
+  setEmailError("");
+  setSuccessMessage("");
 };
 const toggleCategory = (c: string) => {
   if (c === "All") {
@@ -131,7 +138,7 @@ return (
       <aside className="h-fit overflow-hidden rounded-2xl border border-border bg-card shadow-sm lg:sticky lg:top-24">
   {/* SEARCH */}
   <div className="border-b border-border p-5">
-    <h3 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+    <h3 className="text-2xs font-bold uppercase tracking-wide text-muted-foreground">
       Search
     </h3>
 
@@ -149,7 +156,7 @@ return (
   {/* CATEGORIES */}
   <div className="border-b border-border p-5">
     <div className="flex items-center justify-between">
-      <h3 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+      <h3 className="text-2xs font-bold uppercase tracking-wide text-muted-foreground">
         Categories
       </h3>
 
@@ -193,7 +200,7 @@ return (
 
   {/* TRENDING */}
   <div className="border-b border-border p-5">
-    <h3 className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+    <h3 className="text-2xs font-bold uppercase tracking-wide text-muted-foreground">
       Trending
     </h3>
 
@@ -258,14 +265,14 @@ return (
 >
 
 <Link
-  href={`/startup/${s.slug}`}
+  href={`/venture/${s.slug}`}
   className="absolute inset-0 z-0"
   aria-label={`Go to ${s.name}`}
 />
 
 <div className="relative z-10 mb-4 mt-2">
   <div className="flex justify-end">
-    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
+    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-2xs font-bold text-primary">
       <Crown className="size-3.5" />
     Recommended
     </span>
@@ -311,7 +318,7 @@ return (
   {(s.topics ?? []).slice(0, 6).map((t) => (
     <span
       key={t}
-className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground">
+className="rounded-full border border-border bg-muted px-2 py-0.5 text-3xs font-medium text-muted-foreground">
        {t}
     </span>
   ))}
@@ -351,31 +358,25 @@ className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] fo
 </div>
 {/* ENQUIRY MODAL */}
 {showEnquiryModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-    <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-2xl">
-      {/* HEADER */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold">
-          Send Enquiry
-        </h3>
-
-        <button
-          onClick={() => {
-            setShowEnquiryModal(false);
-            setEmail("");
-            setEmailError("");
-            setSuccessMessage("");
-          }}
-          className="text-2xl text-muted-foreground hover:text-foreground"
-        >
-          ×
-        </button>
-      </div>
+  <Modal
+    title="Send Enquiry"
+    onClose={closeEnquiry}
+    titleAction={
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={closeEnquiry}
+        className="text-2xl text-muted-foreground hover:text-foreground"
+      >
+        ×
+      </button>
+    }
+  >
 
       {/* DESCRIPTION */}
  <p className="mt-2 text-sm text-muted-foreground">
 
-        Enter your email address and we'll connect you with{" "}
+        Enter your email address and we&apos;ll connect you with{" "}
         <span className="font-semibold text-foreground">
           {selectedStartup}
         </span>.
@@ -387,7 +388,7 @@ className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] fo
         placeholder="Enter your email"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
-className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"      />
+className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/50"      />
 
       {/* ERROR */}
       {emailError && (
@@ -453,6 +454,7 @@ className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 t
                 setSelectedStartup("");
               }, 2000);
             } catch (err) {
+              console.error("[startups] enquiry failed", err);
               setEmailError("Failed to send enquiry.");
             }
           }}
@@ -461,8 +463,7 @@ className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 t
           Submit
         </button>
       </div>
-    </div>
-  </div>
+  </Modal>
 )}
 </Container>
 );

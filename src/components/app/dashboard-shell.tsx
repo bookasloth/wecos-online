@@ -4,7 +4,14 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Building2, LayoutDashboard, LogOut, Newspaper, User } from "lucide-react";
+import {
+  Building2,
+  LayoutDashboard,
+  LogOut,
+  Newspaper,
+  Sparkles,
+  User,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Logo } from "@/components/brand/logo";
@@ -24,6 +31,7 @@ const nav = [
   { label: "Feed", href: "/feed", icon: Newspaper },
   { label: "Profile", href: "/dashboard/profile", icon: User },
   { label: "Startup", href: "/dashboard/startup", icon: Building2 },
+  { label: "Membership", href: "/dashboard/membership", icon: Sparkles },
 ];
 
 function initials(name: string) {

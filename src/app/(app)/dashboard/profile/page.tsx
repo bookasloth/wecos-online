@@ -29,7 +29,7 @@ export default function ProfileViewPage() {
         action={
           <div className="flex gap-2">
             <Link
-              href={`/u/${profile.handle}`}
+              href={`/${profile.handle}`}
               target="_blank"
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >

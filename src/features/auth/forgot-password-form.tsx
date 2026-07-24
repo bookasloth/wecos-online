@@ -33,7 +33,7 @@ export function ForgotPasswordForm() {
       <Field label="Email" htmlFor="email" error={errors.email?.message}>
         <Input id="email" type="email" autoComplete="email" placeholder="you@example.com" {...register("email")} />
       </Field>
-      <Button type="submit" disabled={isSubmitting} className="h-10 w-full">
+      <Button type="submit" disabled={isSubmitting} size="lg" className="w-full">
         Send reset link
       </Button>
     </form>

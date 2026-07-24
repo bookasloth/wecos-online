@@ -104,7 +104,7 @@ export default function FoundersDirectoryPage() {
             >
               {/* Top bar */}
               <div className="flex h-[36px] items-center justify-between px-4">
-                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-3xs font-semibold text-primary">
                   <svg className="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z" />
                     <path d="M5 21h14" />
@@ -112,7 +112,7 @@ export default function FoundersDirectoryPage() {
                   Recommended
                 </span>
                 {f.currentCompany?.name && (
-                  <span className="truncate text-[11px] font-medium text-muted-foreground">
+                  <span className="truncate text-2xs font-medium text-muted-foreground">
                     {f.currentCompany.name}
                   </span>
                 )}
@@ -157,7 +157,7 @@ export default function FoundersDirectoryPage() {
                 </div>
 
                 {/* Location */}
-                <div className="flex h-[24px] items-center justify-center gap-1 text-[11px] text-muted-foreground">
+                <div className="flex h-[24px] items-center justify-center gap-1 text-2xs text-muted-foreground">
                   <svg className="size-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" />
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" />
@@ -174,7 +174,7 @@ export default function FoundersDirectoryPage() {
                     Connect
                   </Link>
                   <Link
-                    href={`/u/${f.handle}`}
+                    href={`/${f.handle}`}
                     className="flex-1 rounded-xl border border-primary/20 bg-primary/5 py-2.5 text-center text-xs font-semibold text-primary transition-colors hover:border-primary/30 hover:bg-primary/10"
                   >
                     Visit Page

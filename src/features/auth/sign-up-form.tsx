@@ -9,6 +9,7 @@ import { useAppStore } from "@/lib/store/app-store";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SocialAuth } from "@/features/auth/social-auth";
 
 export function SignUpForm() {
   const router = useRouter();
@@ -50,12 +51,12 @@ export function SignUpForm() {
           {...register("password")}
         />
       </Field>
-      <Button type="submit" disabled={isSubmitting} className="h-10 w-full">
-        Create account
+      <Button type="submit" disabled={isSubmitting} size="lg" className="w-full">
+        {isSubmitting ? "Creating account…" : "Create free account"}
       </Button>
-      <p className="text-center text-xs text-muted-foreground">
-        By continuing you agree to our Terms and Privacy Policy.
-      </p>
+
+      {/* Terms live in the auth layout so every screen carries them once. */}
+      <SocialAuth label="Sign up" />
     </form>
   );
 }

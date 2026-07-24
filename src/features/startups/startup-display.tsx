@@ -162,7 +162,7 @@ export function StartupDisplay({
 
         {founder ? (
           <Link
-            href={`/u/${founder.handle}`}
+            href={`/${founder.handle}`}
             className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-border bg-muted/30 px-4 py-3 transition-colors hover:bg-muted"
           >
             <span className="text-sm">

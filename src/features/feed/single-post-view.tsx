@@ -22,6 +22,9 @@ export function SinglePostView({ id }: { id: string }) {
 
   return (
     <div className="mx-auto max-w-2xl space-y-5">
+      {/* The post itself carries the visible title, so this heading exists only
+          to give the page a level-1 entry in the screen-reader heading tree. */}
+      <h1 className="sr-only">Post by {post.author.name}</h1>
       <Link href="/feed" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
         <ArrowLeft className="size-4" /> Back to feed
       </Link>

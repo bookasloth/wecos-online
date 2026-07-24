@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
-import { pricing, cities } from "@/config/site";
+import { pricing, entryTier, tiers, studioDiscountPct, cities } from "@/config/site";
 
 const inr = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 
@@ -68,53 +68,65 @@ const stepImages = [
   "/belong.png",
 ];
 
-const pricingPlans = [
-  {
-    name: "Studio",
-    icon: Rocket,
-    price: 499,
-    description: "For solo founders validating their first idea.",
-    features: [
-      "AI-powered Startup Validation Report",
-      "Founder Page — your public startup identity",
-      "Access to Growth Toolkit templates",
-      "Community chat access",
-    ],
-    cta: "Start with Studio",
-    highlighted: false,
-  },
-  {
-    name: "Network",
+/**
+ * Marketing copy for the paid tiers. Names and prices come from `tiers` in
+ * config/site.ts — only the sales bullets live here, so the homepage can never
+ * drift from what the product actually charges.
+ *
+ * (It previously did: this section hardcoded "Studio / Network / Package" at
+ * ₹499 / ₹1,299 / ₹1,499 **per month**, against annual tiers of
+ * ₹499 / ₹1,299 / ₹1,999.)
+ */
+const planCopy: Record<string, { icon: typeof Rocket; description: string; features: string[]; cta: string }> = {
+  network: {
     icon: Users,
-    price: 1299,
-    description: "For founders ready to connect and grow faster.",
+    description: "For founders who want to be known and reachable.",
     features: [
-      "Everything in Studio",
-      "Coffee Club access — monthly city meetups",
-      "Mentorship Circle — learn from experienced founders",
-      "Founder Fridays — weekly sessions with operators",
-      "Priority support",
+      "Everything in Free",
+      "Unlimited connections and messages",
+      "See who viewed your profile",
+      "Full profile — skills, links, work history",
+      `${studioDiscountPct.network}% off every studio package`,
     ],
     cta: "Join the Network",
-    highlighted: false,
   },
-  {
-    name: "Package",
-    icon: Star,
-    price: 1499,
-    description: "The complete startup engine — nothing held back.",
+  venture: {
+    icon: Rocket,
+    description: "For founders who want customers to find them.",
     features: [
       "Everything in Network",
-      "Full Growth Toolkit — GTM, financials, decks, playbooks",
-      "SaaS Perks & Credits (₹50,000+)",
-      "1-on-1 mentor matching",
-      "Exclusive founder events & retreats",
-      "Lifetime community badge",
+      "List your venture in the directory",
+      "Collect leads, with a lead inbox",
+      "List your business as a studio provider",
+      `${studioDiscountPct.venture}% off every studio package`,
+      "One call with the WeCos founder",
     ],
-    cta: "Get the Full Package",
-    highlighted: true,
+    cta: "Get found",
   },
-];
+  circle: {
+    icon: Star,
+    description: "For founders who want to lead the community.",
+    features: [
+      "Everything in Venture",
+      "Create events and host a Coffee Club",
+      "Free entry to every masterclass",
+      `${studioDiscountPct.circle}% off every studio package`,
+      "Partner brand perks and credits",
+      "Featured placement everywhere",
+    ],
+    cta: "Join the Circle",
+  },
+};
+
+const pricingPlans = tiers
+  .filter((t) => t.priceInr > 0)
+  .map((t) => ({
+    id: t.id,
+    name: t.name,
+    price: t.priceInr,
+    highlighted: "featured" in t && t.featured === true,
+    ...planCopy[t.id],
+  }));
 
 function SectionHeading({
   eyebrow,
@@ -226,7 +238,7 @@ export default function HomePage() {
               {problems.slice(0, 3).map(({ icon: Icon, problem, solution }, index) => (
                 <div
                   key={problem}
-                  className="group relative min-h-[210px] overflow-hidden rounded-[26px] border border-border bg-card px-6 py-5 shadow-[0_14px_45px_rgba(88,28,135,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_60px_rgba(88,28,135,0.11)]"
+                  className="group relative min-h-[210px] overflow-hidden rounded-[26px] border border-border bg-card px-6 py-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-card-hover"
                 >
                   <span className="absolute right-6 top-5 text-4xl font-extrabold text-muted-foreground/20 transition-colors group-hover:text-primary/20">
                     {String(index + 1).padStart(2, "0")}
@@ -251,7 +263,7 @@ export default function HomePage() {
               {problems.slice(3).map(({ icon: Icon, problem, solution }, index) => (
                 <div
                   key={problem}
-                  className="group relative min-h-[210px] overflow-hidden rounded-[26px] border border-border bg-card px-6 py-5 shadow-[0_14px_45px_rgba(88,28,135,0.06)] transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_20px_60px_rgba(88,28,135,0.11)]"
+                  className="group relative min-h-[210px] overflow-hidden rounded-[26px] border border-border bg-card px-6 py-5 shadow-card transition-all duration-300 hover:-translate-y-1 hover:border-primary/30 hover:shadow-card-hover"
                 >
                   <span className="absolute right-6 top-5 text-5xl font-extrabold text-muted-foreground/20 transition-colors group-hover:text-primary/20">
                     {String(index + 4).padStart(2, "0")}
@@ -326,13 +338,13 @@ export default function HomePage() {
           <SectionHeading
             eyebrow="Pricing"
             title="Pick the plan that fits your stage."
-            subtitle="Start small, grow fast. Every plan includes access to India's fastest-growing startup community."
+            subtitle="Annual, and free to start. Every paid tier includes everything below it."
           />
 
           <div className="mt-12 grid gap-6 lg:grid-cols-3">
-            {pricingPlans.map(({ name, icon: Icon, price, description, features, cta, highlighted }) => (
+            {pricingPlans.map(({ id, name, icon: Icon, price, description, features, cta, highlighted }) => (
               <div
-                key={name}
+                key={id}
                 className={cn(
                   "relative flex flex-col overflow-hidden rounded-3xl border bg-card transition-all duration-300",
                   highlighted
@@ -346,7 +358,7 @@ export default function HomePage() {
                   </div>
 
                   {highlighted ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-2xs font-bold text-primary">
                       <Crown className="size-3.5" />
                       Recommended
                     </span>
@@ -366,7 +378,7 @@ export default function HomePage() {
                     <span className="text-4xl font-extrabold tracking-tight text-foreground">
                       {inr(price)}
                     </span>
-                    <span className="pb-1 text-primary">/month</span>
+                    <span className="pb-1 text-primary">/year</span>
                   </div>
                 </div>
 
@@ -427,7 +439,7 @@ export default function HomePage() {
           <div className="mt-10 text-center">
             <Link
               href="/coffee-clubs"
-              className={cn(buttonVariants({ variant: "outline" }), "h-11 px-6")}
+              className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
             >
               Find a Coffee Club near you
             </Link>
@@ -466,8 +478,8 @@ export default function HomePage() {
               </h2>
 
               <p className="mx-auto mt-4 max-w-xl text-white/80">
-                Get validation, clarity and community — all for{" "}
-                {inr(pricing.membershipInr)}/year.
+                Get validation, clarity and community — membership from{" "}
+                {inr(entryTier.priceInr)}/year.
               </p>
 
               <div className="mt-8 flex justify-center">

@@ -18,7 +18,7 @@ export function PostCard({ post, className }: { post: FeedPost; className?: stri
   return (
     <article className={cn("rounded-2xl border border-border bg-card p-4 sm:p-5", className)}>
       <header className="flex items-center gap-3">
-        <Link href={`/u/${post.author.handle}`}>
+        <Link href={`/${post.author.handle}`}>
           <Avatar className="size-10">
             {post.author.avatarUrl ? <AvatarImage src={post.author.avatarUrl} alt={post.author.name} /> : null}
             <AvatarFallback>{post.author.avatarText}</AvatarFallback>
@@ -26,7 +26,7 @@ export function PostCard({ post, className }: { post: FeedPost; className?: stri
         </Link>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1">
-            <Link href={`/u/${post.author.handle}`} className="truncate font-medium text-foreground hover:underline">
+            <Link href={`/${post.author.handle}`} className="truncate font-medium text-foreground hover:underline">
               {post.author.name}
             </Link>
             {post.author.verified ? <BadgeCheck className="size-4 shrink-0 text-primary" /> : null}

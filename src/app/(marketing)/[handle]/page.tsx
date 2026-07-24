@@ -1,10 +1,13 @@
 "use client";
 
 /**
- * Public founder page (LinkedIn-style). Resolves from sample showcase data OR
- * the local mock store (your own handle, mapped into the rich shape). With the
- * backend this becomes a server component fetched by handle (SEO). Email is
- * never shown publicly.
+ * Public founder page at `/username`.
+ *
+ * Resolves from sample showcase data OR the local mock store (your own handle,
+ * mapped into the rich shape). With the backend this becomes a server component
+ * fetched by handle (SEO). Email is never shown publicly.
+ *
+ * Handle format and reserved words are validated in layout.tsx.
  */
 
 import Link from "next/link";
@@ -23,7 +26,7 @@ import {
 
 export default function PublicFounderPage() {
   const params = useParams<{ handle: string }>();
-  const handle = params.handle;
+  const handle = decodeURIComponent(params.handle).toLowerCase();
   const hydrated = useAppHydrated();
   const storeProfile = useAppStore((s) => s.profile);
   const storeStartup = useAppStore((s) => s.startup);
@@ -48,11 +51,10 @@ export default function PublicFounderPage() {
       <Container className="flex min-h-[60vh] flex-col items-center justify-center py-20 text-center">
         <h1 className="text-2xl font-bold tracking-tight">Founder not found</h1>
         <p className="mt-3 max-w-sm text-muted-foreground">
-          This founder page isn&apos;t available. The public founder directory
-          arrives with the backend phase.
+          No founder is using <span className="font-medium">/{handle}</span> yet.
         </p>
-        <Link href="/" className={cn(buttonVariants({ variant: "outline" }), "mt-6")}>
-          Back home
+        <Link href="/founders" className={cn(buttonVariants({ variant: "outline" }), "mt-6")}>
+          Browse founders
         </Link>
       </Container>
     );
@@ -62,7 +64,7 @@ export default function PublicFounderPage() {
     <section className="bg-muted/30">
       <Container className="max-w-5xl py-6 sm:py-8">
         <div className="mb-3 flex justify-end">
-          <CopyLinkButton path={`/u/${handle}`} />
+          <CopyLinkButton path={`/${handle}`} />
         </div>
         <FounderProfile data={data} />
       </Container>

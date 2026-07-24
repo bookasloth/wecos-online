@@ -67,6 +67,19 @@
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
 
+  /* Micro-type used by badges, pills and metadata rows. */
+  --text-2xs: 0.6875rem;
+  --text-3xs: 0.625rem;
+
+  /* Card elevation. Defined as tokens so dark mode can drop the purple tint,
+     which reads as a haze on the deep-ink surfaces. */
+  --shadow-card: var(--card-shadow);
+  --shadow-card-hover: var(--card-shadow-hover);
+
+  /* Controls (button, input, select, chip) sit tighter than cards. Auth0 uses
+     4px, Razorpay ~6px; 6px keeps the crispness without feeling severe. */
+  --radius-control: 0.375rem;
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -133,6 +146,9 @@
   --sidebar-accent-foreground: #6a23c9;
   --sidebar-border: #e6e2db;
   --sidebar-ring: #8e28ff;
+
+  --card-shadow: 0 14px 45px rgba(88, 28, 135, 0.06);
+  --card-shadow-hover: 0 20px 60px rgba(88, 28, 135, 0.11);
 }
 
 .dark {
@@ -187,6 +203,10 @@
   --sidebar-accent-foreground: #d9c2ff;
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: #9333ff;
+
+  /* Neutral on dark — a purple-tinted shadow over #0e1011 reads as a smudge. */
+  --card-shadow: 0 14px 45px rgba(0, 0, 0, 0.45);
+  --card-shadow-hover: 0 20px 60px rgba(0, 0, 0, 0.6);
 }
 
 @layer base {
@@ -280,4 +300,55 @@
 
 .sidebar-scroll {
   scrollbar-width: none;
+}
+
+/*
+ * Button glare.
+ *
+ * On hover the surface darkens and a band of the *original* colour sweeps
+ * left → right → left, once. Because the band is the undarkened brand colour it
+ * reads as light catching the surface rather than a white gloss overlay, which
+ * is what makes it feel like a material instead of a CSS effect.
+ *
+ * `--sheen` is set per variant on the element. The global prefers-reduced-motion
+ * block above collapses the animation, so no extra guard is needed here.
+ */
+@keyframes button-sheen {
+  0% {
+    transform: translateX(-120%) skewX(-12deg);
+  }
+  50% {
+    transform: translateX(120%) skewX(-12deg);
+  }
+  100% {
+    transform: translateX(-120%) skewX(-12deg);
+  }
+}
+
+.btn-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-sheen::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 60%;
+  pointer-events: none;
+  opacity: 0;
+  transform: translateX(-120%) skewX(-12deg);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in oklch, var(--sheen, transparent) 70%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+.btn-sheen:hover::after {
+  opacity: 1;
+  animation: button-sheen 1100ms ease-in-out;
 }
