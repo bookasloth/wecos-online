@@ -2,7 +2,7 @@
 
 import { Building2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { cities, studios, siteConfig } from "@/config/site";
+import { studios, siteConfig } from "@/config/site";
 
 const host = siteConfig.url.replace(/^https?:\/\//, "");
 
@@ -22,7 +22,7 @@ export function LivePreview({
   fullName,
   headline,
   handle,
-  citySlug,
+  cityName,
   needs,
   companyName,
   industry,
@@ -31,16 +31,12 @@ export function LivePreview({
   fullName: string;
   headline: string;
   handle: string;
-  citySlug: string;
+  cityName: string;
   needs: string[];
   companyName: string;
   industry: string;
   className?: string;
 }) {
-  const cityName =
-    citySlug === "elsewhere"
-      ? "Somewhere else"
-      : cities.find((c) => c.slug === citySlug)?.name ?? "";
   const needLabels = needs
     .map((slug) => studios.find((s) => s.slug === slug)?.name)
     .filter(Boolean) as string[];

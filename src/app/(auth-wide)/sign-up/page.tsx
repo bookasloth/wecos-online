@@ -3,33 +3,15 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/logo";
 import { TwoToneHeading } from "@/components/patterns/two-tone-heading";
 import { SignUpForm } from "@/features/auth/sign-up-form";
+import { SocialProofPanel } from "@/features/auth/social-proof-panel";
 
 export const metadata: Metadata = { title: "Create account" };
 
 /**
  * Two-part signup: the form on the left, a social-proof panel on the right.
  * Full-bleed — it lives in its own route group so it escapes the centred-card
- * (auth) layout that sign-in and forgot-password still use.
- *
- * The right panel is skeleton social proof: placeholder tiles standing in for
- * partner / featured-startup logos until real assets exist.
+ * (auth) layout that forgot-password still uses.
  */
-
-const trustLogos = [
-  "Zerodha",
-  "Razorpay",
-  "CRED",
-  "Groww",
-  "Meesho",
-  "Zepto",
-  "PhonePe",
-  "Postman",
-  "Swiggy",
-  "Urban Company",
-  "upGrad",
-  "BrowserStack",
-];
-
 export default function SignUpPage() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
@@ -74,46 +56,7 @@ export default function SignUpPage() {
       </div>
 
       {/* Right — social proof */}
-      <aside className="relative hidden overflow-hidden bg-muted/50 lg:flex lg:flex-col lg:justify-center lg:px-12">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_50%_at_70%_20%,color-mix(in_oklch,var(--primary)_14%,transparent),transparent)]"
-        />
-
-        <div className="relative mx-auto w-full max-w-md">
-          <p className="mb-6 text-center text-sm font-medium text-muted-foreground">
-            The founders building India&apos;s next startups are here
-          </p>
-
-          <div className="grid grid-cols-3 overflow-hidden rounded-xl border border-border bg-card/60">
-            {trustLogos.map((name, i) => (
-              <div
-                key={name}
-                className={cellClass(i, trustLogos.length)}
-              >
-                <span className="text-sm font-semibold tracking-tight text-foreground/70">
-                  {name}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </aside>
+      <SocialProofPanel headline="The founders building India's next startups are here" />
     </div>
   );
-}
-
-/** Grid cell with hairline borders that don't double up on the outer edges. */
-function cellClass(i: number, total: number) {
-  const cols = 3;
-  const lastRowStart = Math.floor((total - 1) / cols) * cols;
-  const notLastCol = (i + 1) % cols !== 0;
-  const notLastRow = i < lastRowStart;
-  return [
-    "grid h-20 place-items-center px-2 text-center",
-    notLastCol && "border-r border-border",
-    notLastRow && "border-b border-border",
-  ]
-    .filter(Boolean)
-    .join(" ");
 }

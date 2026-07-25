@@ -12,6 +12,7 @@ import { TwoToneHeading } from "@/components/patterns/two-tone-heading";
 import { StepRail } from "@/components/patterns/step-rail";
 import { cities, studios, siteConfig } from "@/config/site";
 import { industries } from "@/features/startups/constants";
+import { indianDistricts } from "@/config/india-districts";
 import { useAppStore, useAppHydrated } from "@/lib/store/app-store";
 import { onboardingSteps, stages } from "./steps";
 import { HandleField, checkHandle, type HandleState } from "./handle-field";
@@ -86,7 +87,10 @@ function Flow() {
   // About you — seeded from whatever sign-up already captured.
   const [fullName, setFullName] = useState(() => profile?.fullName ?? "");
   const [headline, setHeadline] = useState(() => profile?.headline ?? "");
-  const [citySlug, setCitySlug] = useState(() => profile?.citySlug ?? "");
+  const [cityValue, setCityValue] = useState(() => {
+    const c = cities.find((c) => c.slug === profile?.citySlug);
+    return c?.name ?? profile?.location ?? "";
+  });
   const [handle, setHandleValue] = useState(() => profile?.handle ?? "");
 
   // What you need
@@ -106,12 +110,27 @@ function Flow() {
   const profileValid = fullName.trim().length >= 2 && handleState.status === "ok";
   const companyValid = companyName.trim().length >= 2;
 
+  // Coffee Club cities first, then every other Indian district. Deduped.
+  const cityOptions = useMemo(() => {
+    const top = cities.map((c) => c.name);
+    const seen = new Set(top.map((n) => n.toLowerCase()));
+    return [...top, ...indianDistricts.filter((d) => !seen.has(d.toLowerCase()))];
+  }, []);
+
+  // A free-typed city maps back to a Coffee Club slug when it is one of ours;
+  // otherwise only the location text is kept.
+  const cityFields = () => {
+    const match = cities.find(
+      (c) => c.name.toLowerCase() === cityValue.trim().toLowerCase(),
+    );
+    return { citySlug: match?.slug ?? "", location: cityValue.trim() };
+  };
+
   const saveProfileStep = () => {
     saveProfile({
       fullName: fullName.trim(),
       headline: headline.trim(),
-      citySlug,
-      location: cities.find((c) => c.slug === citySlug)?.name ?? "",
+      ...cityFields(),
       bio: profile?.bio ?? "",
       avatarUrl: profile?.avatarUrl ?? "",
     });
@@ -123,10 +142,9 @@ function Flow() {
     saveProfile({
       fullName: fullName.trim() || profile?.fullName || "",
       headline: headline.trim(),
-      citySlug,
+      ...cityFields(),
       needs,
       stage,
-      location: cities.find((c) => c.slug === citySlug)?.name ?? "",
       bio: profile?.bio ?? "",
       avatarUrl: profile?.avatarUrl ?? "",
     });
@@ -151,12 +169,11 @@ function Flow() {
   };
 
   return (
-    <div className="grid min-h-[calc(100dvh-4rem)] lg:grid-cols-2">
-      {/* Left: progress + active step */}
-      <div className="flex flex-col gap-8 overflow-y-auto px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
-        <StepRail steps={onboardingSteps} current={step} />
-
-        <div className="min-w-0 flex-1">
+    <div className="grid h-[calc(100dvh-4rem)] grid-rows-[auto_1fr] lg:grid-cols-2 lg:grid-rows-1">
+      {/* Left: active step inputs. Fixed-height page — this column scrolls if a
+          step is taller than the viewport, so the page itself never does. */}
+      <div className="order-2 min-h-0 overflow-y-auto lg:order-1">
+        <div className="mx-auto flex min-h-full w-full max-w-xl flex-col justify-center px-4 py-8 sm:px-8 lg:px-12 lg:py-12">
           {step === WELCOME && (
             <section className="flex h-full flex-col justify-center space-y-6">
               <span className="grid size-12 place-items-center rounded-2xl bg-accent text-accent-foreground">
@@ -215,29 +232,25 @@ function Flow() {
 
                 <HandleField value={handle} onChange={setHandleValue} state={handleState} />
 
-                <div className="space-y-2">
-                  <p className="text-sm font-medium">Your city</p>
-                  <p className="text-xs text-muted-foreground">
-                    We&apos;ll connect you to your Coffee Club chapter.
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {cities.map((c) => (
-                      <Choice
-                        key={c.slug}
-                        selected={citySlug === c.slug}
-                        onClick={() => setCitySlug(citySlug === c.slug ? "" : c.slug)}
-                      >
-                        {c.name}
-                      </Choice>
+                <Field
+                  label="Your city"
+                  htmlFor="city"
+                  hint="Our five Coffee Club cities sit up top — start typing for any other district."
+                >
+                  <Input
+                    id="city"
+                    list="city-options"
+                    value={cityValue}
+                    onChange={(e) => setCityValue(e.target.value)}
+                    placeholder="Search your city or district"
+                    autoComplete="off"
+                  />
+                  <datalist id="city-options">
+                    {cityOptions.map((name) => (
+                      <option key={name} value={name} />
                     ))}
-                    <Choice
-                      selected={citySlug === "elsewhere"}
-                      onClick={() => setCitySlug(citySlug === "elsewhere" ? "" : "elsewhere")}
-                    >
-                      Somewhere else
-                    </Choice>
-                  </div>
-                </div>
+                  </datalist>
+                </Field>
               </div>
 
               <div className="flex items-center justify-between border-t border-border pt-6">
@@ -262,15 +275,15 @@ function Flow() {
 
               <div className="space-y-2">
                 <p className="text-sm font-medium">Where you are</p>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
                   {stages.map((s) => (
                     <Choice
                       key={s.id}
                       selected={stage === s.id}
                       onClick={() => setStage(stage === s.id ? "" : s.id)}
+                      className="text-center font-medium"
                     >
-                      <span className="block font-medium text-foreground">{s.label}</span>
-                      <span className="block text-xs">{s.hint}</span>
+                      {s.label}
                     </Choice>
                   ))}
                 </div>
@@ -431,17 +444,21 @@ function Flow() {
         </div>
       </div>
 
-      {/* Right: live preview */}
-      <LivePreview
-        className="hidden lg:flex"
-        fullName={fullName}
-        headline={headline}
-        handle={handle}
-        citySlug={citySlug}
-        needs={needs}
-        companyName={companyName}
-        industry={industry}
-      />
+      {/* Right: progress on top (small), live preview below. On mobile the rail
+          collapses to a progress bar and the preview is hidden to save height. */}
+      <aside className="order-1 flex min-h-0 flex-col gap-8 overflow-y-auto bg-muted/40 px-4 py-6 sm:px-8 lg:order-2 lg:py-10">
+        <StepRail steps={onboardingSteps} current={step} />
+        <LivePreview
+          className="hidden !bg-transparent p-0 justify-start lg:flex lg:p-0"
+          fullName={fullName}
+          headline={headline}
+          handle={handle}
+          cityName={cityValue}
+          needs={needs}
+          companyName={companyName}
+          industry={industry}
+        />
+      </aside>
     </div>
   );
 }
