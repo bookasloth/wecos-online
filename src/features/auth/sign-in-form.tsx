@@ -9,6 +9,7 @@ import { signInSchema, type SignInValues } from "@/features/auth/schema";
 import { useAppStore } from "@/lib/store/app-store";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/form/password-input";
 import { Button } from "@/components/ui/button";
 import { SocialAuth } from "@/features/auth/social-auth";
 
@@ -36,9 +37,8 @@ export function SignInForm() {
         <Input id="email" type="email" autoComplete="email" placeholder="you@example.com" {...register("email")} />
       </Field>
       <Field label="Password" htmlFor="password" error={errors.password?.message}>
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="current-password"
           placeholder="••••••••"
           {...register("password")}

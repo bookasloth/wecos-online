@@ -22,10 +22,12 @@ export const onboardingSteps: Step[] = [
   { id: "done", label: "Done", hint: "Your profile is live" },
 ];
 
-/** Founder stage — shapes what we surface first. */
+/** Founder stage — shapes what we surface first. Six plain buttons, no subtext. */
 export const stages = [
-  { id: "idea", label: "Idea", hint: "Exploring a problem" },
-  { id: "building", label: "Building", hint: "Pre-launch" },
-  { id: "launched", label: "Launched", hint: "Live with users" },
-  { id: "growing", label: "Growing", hint: "Revenue and scaling" },
+  { id: "idea", label: "Idea" },
+  { id: "building", label: "Building" },
+  { id: "mvp", label: "MVP" },
+  { id: "launched", label: "Launched" },
+  { id: "revenue", label: "Early Revenue" },
+  { id: "scaling", label: "Scaling" },
 ] as const;

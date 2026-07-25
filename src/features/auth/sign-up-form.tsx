@@ -8,6 +8,7 @@ import { signUpSchema, type SignUpValues } from "@/features/auth/schema";
 import { useAppStore } from "@/lib/store/app-store";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
+import { PasswordInput } from "@/components/form/password-input";
 import { Button } from "@/components/ui/button";
 import { SocialAuth } from "@/features/auth/social-auth";
 
@@ -43,9 +44,8 @@ export function SignUpForm() {
         hint="At least 8 characters"
         error={errors.password?.message}
       >
-        <Input
+        <PasswordInput
           id="password"
-          type="password"
           autoComplete="new-password"
           placeholder="••••••••"
           {...register("password")}
