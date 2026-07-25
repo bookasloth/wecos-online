@@ -1,18 +1,27 @@
 import type { Metadata } from "next";
-import { Geist_Mono } from "next/font/google";
+import { Geist_Mono, Poppins, Lora } from "next/font/google";
 import { AppProviders } from "@/providers/app-providers";
 import { siteConfig } from "@/config/site";
-// Self-hosted Open Sauce Sans (matches existing WeCos brand). Latin subset only.
-import "@fontsource/open-sauce-sans/latin-400.css";
-import "@fontsource/open-sauce-sans/latin-500.css";
-import "@fontsource/open-sauce-sans/latin-600.css";
-import "@fontsource/open-sauce-sans/latin-700.css";
-import "@fontsource/open-sauce-sans/latin-800.css";
 import "./globals.css";
 
 const fontMono = Geist_Mono({
   variable: "--font-mono",
   subsets: ["latin"],
+  display: "swap",
+});
+
+// Body / UI — Poppins. Headings (h1, h2) — Lora.
+const fontSans = Poppins({
+  variable: "--font-poppins",
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
+
+const fontHeading = Lora({
+  variable: "--font-lora",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
   display: "swap",
 });
 
@@ -35,7 +44,7 @@ export default function RootLayout({
     <html
       lang="en"
       suppressHydrationWarning
-      className={`${fontMono.variable} h-full`}
+      className={`${fontSans.variable} ${fontHeading.variable} ${fontMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
         <AppProviders>{children}</AppProviders>
