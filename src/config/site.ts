@@ -99,7 +99,7 @@ export const tiers = [
   },
   {
     id: "network",
-    name: "Network",
+    name: "Solo",
     priceInr: 499,
     promise: "Be known",
     summary: "Reach any founder on WeCos, and be reachable back.",
@@ -109,12 +109,12 @@ export const tiers = [
     name: "Venture",
     priceInr: 1299,
     promise: "Be found",
-    summary: "List your venture, collect leads, get discounted studios.",
+    summary: "List your startup, collect leads, get discounted studios.",
     featured: true,
   },
   {
     id: "circle",
-    name: "Circle",
+    name: "Studio",
     priceInr: 1999,
     promise: "Be the reason people come",
     summary: "Host events and chapters, plus every partner perk.",

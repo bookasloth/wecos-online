@@ -88,14 +88,14 @@ const planCopy: Record<string, { icon: typeof Rocket; description: string; featu
       "Full profile — skills, links, work history",
       `${studioDiscountPct.network}% off every studio package`,
     ],
-    cta: "Join the Network",
+    cta: "Join Solo",
   },
   venture: {
     icon: Rocket,
     description: "For founders who want customers to find them.",
     features: [
-      "Everything in Network",
-      "List your venture in the directory",
+      "Everything in Solo",
+      "List your startup in the directory",
       "Collect leads, with a lead inbox",
       "List your business as a studio provider",
       `${studioDiscountPct.venture}% off every studio package`,
@@ -114,7 +114,7 @@ const planCopy: Record<string, { icon: typeof Rocket; description: string; featu
       "Partner brand perks and credits",
       "Featured placement everywhere",
     ],
-    cta: "Join the Circle",
+    cta: "Join Studio",
   },
 };
 

@@ -35,7 +35,7 @@ const tierAdds: Record<TierId, string[]> = {
     `${studioDiscountPct.network}% off studio packages`,
   ],
   venture: [
-    "List your venture in the directory",
+    "List your startup in the directory",
     "Collect leads, with a lead inbox",
     "List your business as a studio provider",
     `${studioDiscountPct.venture}% off studio packages`,
@@ -230,7 +230,7 @@ export default function MembershipPage() {
           }
         >
           <p className="mt-2 text-sm text-muted-foreground">
-            You&apos;ll drop to the free tier at the end of your term. Your venture
+            You&apos;ll drop to the free tier at the end of your term. Your startup
             page goes unlisted and new leads stop arriving — nothing is deleted,
             and everything returns if you resubscribe.
           </p>
