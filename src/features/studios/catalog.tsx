@@ -72,9 +72,14 @@ export type Listing = {
   packages: StudioPackage[];
   kind: "wecos" | "provider";
   verified?: boolean;
+  /** Editorial pick — shows a yellow "Recommended" badge. */
+  recommended?: boolean;
   city?: string;
   parentVenture?: string;
 };
+
+/** WeCos studios we surface as recommended picks. */
+const RECOMMENDED_WECOS = new Set(["marketing", "finance"]);
 
 /** WeCos's own studios as first-party listings. Slug-prefixed to sit beside the
  *  same-named category segment in the URL (/studios/marketing/wecos-marketing). */
@@ -87,6 +92,7 @@ const wecosListings: Listing[] = studios.map((s) => ({
   deliverables: s.deliverables,
   packages: s.packages,
   kind: "wecos",
+  recommended: RECOMMENDED_WECOS.has(s.slug),
 }));
 
 /** ⚠️ MOCK member providers. */
@@ -106,6 +112,7 @@ const providerListings: Listing[] = [
     ],
     kind: "provider",
     verified: true,
+    recommended: true,
     city: "Pune",
     parentVenture: "Rajmudra Media",
   },

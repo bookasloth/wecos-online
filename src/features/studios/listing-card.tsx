@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeCheck, Crown, MapPin } from "lucide-react";
+import { BadgeCheck, Crown, MapPin, Star } from "lucide-react";
 import { cn, formatInr } from "@/lib/utils";
 import { accent, categoryBySlug, fromPrice, type Listing } from "./catalog";
 import { StudioEnquiry } from "./studio-enquiry";
@@ -26,17 +26,20 @@ export function ListingCard({ listing }: { listing: Listing }) {
         aria-label={`Go to ${listing.name}`}
       />
 
-      {/* Badge */}
-      <div className="relative z-10 mt-2 mb-4 flex justify-end">
-        <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full px-3 py-1 text-2xs font-bold",
-            isWecos ? "bg-primary/10 text-primary" : "bg-muted text-muted-foreground",
-          )}
-        >
-          {isWecos ? <Crown className="size-3.5" /> : <BadgeCheck className="size-3.5" />}
-          {isWecos ? "WeCos Studio" : "Verified"}
-        </span>
+      {/* Corner badge — Recommended (yellow) wins, else the WeCos label.
+          Verified is conveyed by the tick next to the name, not here. */}
+      <div className="relative z-10 mt-2 mb-4 flex min-h-6 justify-end">
+        {listing.recommended ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-3 py-1 text-2xs font-bold text-amber-600 dark:text-amber-400">
+            <Star className="size-3.5" />
+            Recommended
+          </span>
+        ) : isWecos ? (
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-2xs font-bold text-primary">
+            <Crown className="size-3.5" />
+            WeCos Studio
+          </span>
+        ) : null}
       </div>
 
       {/* Top row */}
