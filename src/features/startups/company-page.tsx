@@ -713,18 +713,49 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
       The numbers, growth and backing behind the work.
     </p>
 
+    {/* Numbers first — clean, number-forward tiles (no mismatched icons). */}
+    {show.stats && (
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        {data.stats!.map((s) => (
+          <div key={s.label} className="rounded-xl border border-border bg-card p-4">
+            <p className="text-2xl font-bold leading-none tracking-tight text-foreground">
+              {s.value}
+            </p>
+            <p className="mt-1.5 text-xs leading-tight text-muted-foreground">{s.label}</p>
+          </div>
+        ))}
+      </div>
+    )}
+
+    {/* Growth chart — fixed height so the bars actually render, with a trend badge. */}
     {show.traction && (
-      <div className="mt-6 rounded-xl border border-border p-5">
-        <h3 className="text-sm font-semibold text-muted-foreground">{data.traction!.title}</h3>
-        <div className="mt-5 flex h-32 items-end gap-2 sm:gap-4">
+      <div className="mt-4 rounded-xl border border-border p-5">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold text-muted-foreground">{data.traction!.title}</h3>
+          {(() => {
+            const pts = data.traction!.points;
+            const first = pts[0]?.value ?? 0;
+            const last = pts[pts.length - 1]?.value ?? 0;
+            const mult = first ? last / first : 0;
+            if (mult < 1.5) return null;
+            return (
+              <span className="inline-flex items-center gap-1 rounded-full bg-success/10 px-2 py-0.5 text-2xs font-semibold text-success">
+                <TrendingUp className="size-3" />
+                {mult >= 2 ? `${mult % 1 === 0 ? mult : mult.toFixed(1)}×` : `+${Math.round((mult - 1) * 100)}%`}{" "}
+                since {pts[0]?.label}
+              </span>
+            );
+          })()}
+        </div>
+        <div className="mt-5 flex h-28 items-end gap-3 sm:gap-5">
           {(() => {
             const max = Math.max(...data.traction!.points.map((p) => p.value)) || 1;
             return data.traction!.points.map((p) => (
-              <div key={p.label} className="flex flex-1 flex-col items-center gap-2">
-                <span className="text-2xs font-medium text-foreground">{p.value}</span>
+              <div key={p.label} className="flex h-full flex-1 flex-col items-center justify-end gap-1.5">
+                <span className="text-2xs font-semibold text-foreground">{p.value}</span>
                 <div
-                  className="w-full rounded-t-md bg-primary/80"
-                  style={{ height: `${Math.max((p.value / max) * 100, 4)}%` }}
+                  className="w-full rounded-t-md bg-gradient-to-t from-primary/50 to-primary transition-all"
+                  style={{ height: `${Math.max((p.value / max) * 100, 6)}%` }}
                 />
                 <span className="text-2xs text-muted-foreground">{p.label}</span>
               </div>
@@ -763,49 +794,6 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
       </div>
     )}
 
-    {show.stats && (
-    <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
-      {data.stats!.map((s, index) => {
-        const colors = [
-          "bg-primary/10 text-primary",
-          "bg-info/10 text-info",
-          "bg-success/10 text-success",
-          "bg-orange-500/10 text-orange-500",
-          "bg-pink-500/10 text-pink-500",
-          "bg-warning/10 text-warning",
-        ];
-
-        const icons = [Rocket, Users, Globe, Star, Building2, TrendingUp];
-        const Icon = icons[index % icons.length];
-
-        return (
-  <div
-    key={s.label}
-    className="flex items-center gap-3 rounded-xl border border-border bg-card p-5 "
-  >
-    <div
-      className={cn(
-        "grid size-14 shrink-0 place-items-center rounded-2xl",
-        colors[index % colors.length]
-      )}
-    >
-      <Icon className="size-7" />
-    </div>
-
-    <div className="min-w-0">
-      <p className="text-xl font-bold leading-none text-foreground">
-        {s.value}
-      </p>
-
-      <p className="mt-2 text-sm leading-tight text-muted-foreground">
-        {s.label}
-      </p>
-    </div>
-  </div>
-);
-      })}
-    </div>
-    )}
   </div>
 )}
 {/* Removed: hardcoded operating-centres block (placeholder). */}
