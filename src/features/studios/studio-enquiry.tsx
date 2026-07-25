@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { ArrowLeft, ArrowRight, Check, Loader2, PartyPopper, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -38,7 +39,11 @@ export function StudioEnquiry({
   const profile = useAppStore((s) => s.profile);
 
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
+
+  // Portal target is only available after mount (client).
+  useEffect(() => setMounted(true), []);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState("");
@@ -132,7 +137,7 @@ export function StudioEnquiry({
         {label}
       </button>
 
-      {open && (
+      {open && mounted && createPortal(
         <div
           role="dialog"
           aria-modal="true"
@@ -262,7 +267,8 @@ export function StudioEnquiry({
               </>
             )}
           </div>
-        </div>
+        </div>,
+        document.body,
       )}
     </>
   );
