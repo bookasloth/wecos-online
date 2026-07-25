@@ -5,25 +5,30 @@ Living list of every email WeCos sends — to **members**, **admin**, or the
 in the request.
 
 **Status:** `live` = actually sends · `mock` = UI fires it but no real send yet
-(toast placeholder; real send arrives with the backend/Supabase phase) ·
-`planned` = agreed, not built.
+(toast placeholder) · `planned` = agreed, not built.
 
-> There is no email backend yet — every "sent" email today is a mock toast.
-> This register is the spec the backend phase implements against.
+> Most of the app is localStorage-only, but the enquiry endpoint
+> (`/api/company-enquiry`, nodemailer/Gmail) **does send real email today** —
+> both an admin notification and a confirmation to the enquirer. Auth emails are
+> still mock/planned until Supabase Auth lands.
 
 ## Members
 
 | # | Topic | Trigger | Status |
 |---|-------|---------|--------|
-| 1 | Password reset link | Submits the forgot-password form | mock |
-| 2 | Password changed confirmation | Completes reset-password (security notice) | planned |
-| 3 | Welcome / account created | Signs up | planned |
+| 1 | Enquiry confirmation | Sends a studio/startup enquiry (`/api/company-enquiry`) | live |
+| 2 | Document delivery (with download link) | Requests a gated document | live |
+| 3 | Password reset link | Submits the forgot-password form | mock |
+| 4 | Password changed confirmation | Completes reset-password (security notice) | planned |
+| 5 | Welcome / account created | Signs up | planned |
 
 ## Admin
 
 | # | Topic | Trigger | Status |
 |---|-------|---------|--------|
-| 1 | New member registration | A user signs up | planned |
+| 1 | New enquiry notification | A visitor submits an enquiry | live |
+| 2 | New document request | A visitor requests a document | live |
+| 3 | New member registration | A user signs up | planned |
 
 ## Support
 
@@ -33,6 +38,6 @@ in the request.
 
 ## Totals
 
-- Members: 3 (1 mock, 2 planned)
-- Admin: 1 (1 planned)
+- Members: 5 (2 live, 1 mock, 2 planned)
+- Admin: 3 (2 live, 1 planned)
 - Support: 0

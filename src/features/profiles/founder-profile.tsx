@@ -177,7 +177,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
         {data.currentCompany && (
           <>
             <span>·</span>
-            <Link href={`/venture/${data.currentCompany.handle}`} className="font-medium text-primary hover:underline">
+            <Link href={`/startup/${data.currentCompany.handle}`} className="font-medium text-primary hover:underline">
               {data.currentCompany.name}
             </Link>
           </>
@@ -358,7 +358,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
     </p>
 
     <Link
-      href={`/venture/${data.currentCompany.handle}`}
+      href={`/startup/${data.currentCompany.handle}`}
       className="mt-3 flex items-center gap-2 rounded-xl border p-2 transition-colors hover:bg-muted"
     >
       <LogoTile
@@ -387,7 +387,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
     </div>
 
     <Link
-      href={`/venture/${data.currentCompany.handle}`}
+      href={`/startup/${data.currentCompany.handle}`}
       className={cn(buttonVariants({ variant: "outline" }), "mt-3 h-8 w-full text-xs")}
     >
       View Company

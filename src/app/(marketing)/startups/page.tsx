@@ -265,7 +265,7 @@ return (
 >
 
 <Link
-  href={`/venture/${s.slug}`}
+  href={`/startup/${s.slug}`}
   className="absolute inset-0 z-0"
   aria-label={`Go to ${s.name}`}
 />
