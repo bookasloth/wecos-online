@@ -502,9 +502,8 @@ export const studioBySlug = (slug: string) =>
 export const reservedHandles = new Set([
   // current routes
   "about", "coffee-clubs", "founders", "membership", "resources", "startups",
-  "studios", "validate", "venture", "ventures", "feed", "dashboard",
+  "studios", "validate", "startup", "feed", "dashboard",
   "onboarding", "sign-in", "sign-up", "forgot-password", "reset-password", "api",
-  "business", "venture",
   "robots.txt", "sitemap.xml", "favicon.ico",
   // likely future routes
   "pricing", "blog", "help", "docs", "events", "marketplace", "jobs", "search",
