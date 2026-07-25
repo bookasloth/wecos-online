@@ -46,5 +46,22 @@ npx tsc --noEmit && npx eslint src && npm run build
 ESLint errors must stay at **zero**. Then check it in a browser — compiling is
 not working.
 
+# Standing conventions
+
+Maintain these as you work, without being reminded:
+
+1. **Email register.** Whenever you add a flow that sends an email to a
+   **member**, **admin**, or **support**, add a row (topic, trigger, status)
+   and update the totals in [docs/EMAILS.md](docs/EMAILS.md). Status vocab:
+   `live` / `mock` / `planned`. There is no email backend yet, so today's
+   sends are mock toasts — the register is the spec the backend phase builds
+   against.
+2. **Commit co-authors.** Credit both of these on every commit:
+   ```
+   Co-Authored-By: thekalamwala <sndatarkar@gmail.com>
+   Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+   ```
+   Author stays `bookasloth`.
+
 Known issues and deliberate debt: [docs/KNOWN_ISSUES.md](docs/KNOWN_ISSUES.md)
 and [docs/FRONTEND_AUDIT.md](docs/FRONTEND_AUDIT.md) §14.
