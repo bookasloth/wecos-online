@@ -19,7 +19,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
   const isWecos = listing.kind === "wecos";
 
   return (
-    <li className="relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary hover:shadow-md">
+    <li className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary hover:shadow-md">
       <Link
         href={`/startup/${listing.slug}`}
         className="absolute inset-0 z-0"
@@ -82,30 +82,31 @@ export function ListingCard({ listing }: { listing: Listing }) {
             {listing.city}
           </span>
         ) : null}
-      </div>
-
-      {/* Stats */}
-      <div className="relative z-10 mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-        <span>
-          {from ? (
-            <>
-              From <span className="font-medium text-foreground">{formatInr(from)}</span>
-            </>
-          ) : (
-            "On request"
-          )}
+        <span className="inline-flex items-center gap-1 rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 text-3xs font-medium text-primary">
+          {isWecos ? <Crown className="size-3" /> : <BadgeCheck className="size-3" />}
+          {isWecos ? "WeCos Team" : "Verified Provider"}
         </span>
-        <span>•</span>
-        <span>{isWecos ? "WeCos team" : "Verified provider"}</span>
       </div>
 
-      {/* Bottom */}
-      <div className="relative z-10 mt-5 flex items-center justify-center border-t border-border pt-4">
-        <StudioEnquiry
-          studioName={listing.name}
-          label="Enquire"
-          className="h-10 px-6 text-sm font-bold"
-        />
+      {/* Price + Enquire — hidden until hover, then revealed from the bottom,
+          growing the card. On touch devices (no hover) it's always shown. */}
+      <div className="relative z-10 max-h-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:mt-4 group-hover:max-h-28 group-hover:opacity-100 [@media(hover:none)]:mt-4 [@media(hover:none)]:max-h-28 [@media(hover:none)]:opacity-100">
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+          <p className="text-sm text-muted-foreground">
+            {from ? (
+              <>
+                From <span className="font-semibold text-foreground">{formatInr(from)}</span>
+              </>
+            ) : (
+              "On request"
+            )}
+          </p>
+          <StudioEnquiry
+            studioName={listing.name}
+            label="Enquire now"
+            className="h-9 px-5 text-sm font-bold"
+          />
+        </div>
       </div>
     </li>
   );
