@@ -35,6 +35,11 @@ const enquirySchema = z.discriminatedUnion("type", [
     type: z.literal("enquiry"),
     userEmail: z.email().max(254),
     companyName: z.string().trim().min(1).max(200),
+    name: z.string().trim().max(100).optional(),
+    phone: z.string().trim().max(30).optional(),
+    message: z.string().trim().max(2000).optional(),
+    budget: z.string().trim().max(60).optional(),
+    timeline: z.string().trim().max(60).optional(),
   }),
   z.object({
     type: z.literal("document"),
@@ -75,7 +80,17 @@ function adminEmailHtml(input: {
   userEmail: string;
   type: string;
   documentName: string;
+  name?: string;
+  phone?: string;
+  message?: string;
+  budget?: string;
+  timeline?: string;
 }) {
+  const row = (label: string, value?: string) =>
+    value && value.trim()
+      ? `<tr><td style="padding:6px 0;vertical-align:top"><b>${label}</b></td><td style="padding:6px 0">${esc(value)}</td></tr>`
+      : "";
+
   return `
         <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
           <div style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);padding:25px;color:white">
@@ -87,25 +102,18 @@ function adminEmailHtml(input: {
 
           <div style="padding:30px">
             <table style="width:100%">
+              ${row("Enquiring about", input.companyName)}
+              ${row("Name", input.name)}
+              ${row("User Email", input.userEmail)}
+              ${row("Phone / WhatsApp", input.phone)}
+              ${row("What they need", input.message)}
+              ${row("Budget", input.budget)}
+              ${row("Timeline", input.timeline)}
+              ${row("Type", input.type)}
+              ${input.documentName !== "N/A" ? row("Document", input.documentName) : ""}
               <tr>
-                <td><b>Company</b></td>
-                <td>${esc(input.companyName)}</td>
-              </tr>
-              <tr>
-                <td><b>User Email</b></td>
-                <td>${esc(input.userEmail)}</td>
-              </tr>
-              <tr>
-                <td><b>Type</b></td>
-                <td>${esc(input.type)}</td>
-              </tr>
-              <tr>
-                <td><b>Document</b></td>
-                <td>${esc(input.documentName)}</td>
-              </tr>
-              <tr>
-                <td><b>Date</b></td>
-                <td>${new Date().toLocaleString()}</td>
+                <td style="padding:6px 0"><b>Date</b></td>
+                <td style="padding:6px 0">${new Date().toLocaleString()}</td>
               </tr>
             </table>
           </div>
@@ -234,6 +242,7 @@ export async function POST(req: Request) {
     data.type === "document"
       ? enquiryDocuments.find((d) => d.label === data.documentName)
       : undefined;
+  const enq = data.type === "enquiry" ? data : undefined;
 
   try {
     const transporter = nodemailer.createTransport({
@@ -254,6 +263,11 @@ export async function POST(req: Request) {
         userEmail: data.userEmail,
         type: data.type,
         documentName: doc?.label ?? "N/A",
+        name: enq?.name,
+        phone: enq?.phone,
+        message: enq?.message,
+        budget: enq?.budget,
+        timeline: enq?.timeline,
       }),
     });
 

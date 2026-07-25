@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { StudioEnquiry } from "@/features/studios/studio-enquiry";
 import {
   BadgeCheck,
   CalendarDays,
@@ -18,7 +19,6 @@ import {
   AlarmClockCheck,
   FileText,
   Globe,
-  ArrowRight,
   Heart,
 } from "lucide-react";
 import {
@@ -309,12 +309,11 @@ className="group relative w-[180px] overflow-hidden rounded-2xl border border-bo
     </div>
 
     <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-<button
-  onClick={() => setShowEnquiryModal(true)}
-className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-8 py-3 text-sm font-semibold text-primary-foreground shadow-lg transition-colors hover:bg-primary/90 sm:w-auto">
-    <Rocket className="size-4" />
-  Enquire Now
-</button>
+<StudioEnquiry
+  studioName={data.name}
+  label="Enquire Now"
+  className="w-full rounded-xl px-8 shadow-lg sm:w-auto"
+/>
 
 <a
   href="https://www.bookasloth.com"
@@ -404,17 +403,13 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
                 )}
 
                 <div className="mt-5 flex items-center justify-end">
-<button
-  type="button"
-  onClick={() => {
-    setSelectedDocument("");
-    setShowEnquiryModal(true);
-  }}
-  className="flex items-center gap-1 text-sm font-semibold text-primary transition group-hover:gap-2"
->
-  Enquire
-  <ArrowRight className="size-4" />
-</button>
+<StudioEnquiry
+  studioName={data.name}
+  packageName={p.name}
+  label="Enquire"
+  variant="link"
+  className="h-auto p-0 text-sm font-semibold"
+/>
 </div>
               </div>
             );
