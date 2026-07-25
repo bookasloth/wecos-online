@@ -88,25 +88,26 @@ export function ListingCard({ listing }: { listing: Listing }) {
         </span>
       </div>
 
-      {/* Price + Enquire — hidden until hover, then revealed from the bottom,
-          growing the card. On touch devices (no hover) it's always shown. */}
-      <div className="relative z-10 max-h-0 overflow-hidden opacity-0 transition-all duration-300 ease-out group-hover:mt-4 group-hover:max-h-28 group-hover:opacity-100 [@media(hover:none)]:mt-4 [@media(hover:none)]:max-h-28 [@media(hover:none)]:opacity-100">
-        <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
-          <p className="text-sm text-muted-foreground">
-            {from ? (
-              <>
-                From <span className="font-semibold text-foreground">{formatInr(from)}</span>
-              </>
-            ) : (
-              "On request"
-            )}
-          </p>
-          <StudioEnquiry
-            studioName={listing.name}
-            label="Enquire now"
-            className="h-9 px-5 text-sm font-bold"
-          />
-        </div>
+      {/* Price + Enquire. The slot always reserves its height (so the card
+          never resizes and the grid stays aligned); the content is invisible
+          and nudged down until hover, then fades and slides up in place.
+          pointer-events are off while hidden so clicks reach the card link.
+          Always shown on touch devices (no hover). */}
+      <div className="relative z-10 mt-4 flex translate-y-1 items-center justify-between gap-3 border-t border-border pt-4 opacity-0 transition-all duration-300 ease-out pointer-events-none group-hover:translate-y-0 group-hover:opacity-100 group-hover:pointer-events-auto [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto">
+        <p className="text-sm text-muted-foreground">
+          {from ? (
+            <>
+              From <span className="font-semibold text-foreground">{formatInr(from)}</span>
+            </>
+          ) : (
+            "On request"
+          )}
+        </p>
+        <StudioEnquiry
+          studioName={listing.name}
+          label="Enquire now"
+          className="h-9 px-5 text-sm font-bold"
+        />
       </div>
     </li>
   );
