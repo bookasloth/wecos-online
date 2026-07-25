@@ -112,9 +112,15 @@ const compact = (n?: number) =>
     : new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 
 
-function Card({ children, className }: { children: React.ReactNode; className?: string }) {
+function Card({
+  children,
+  className,
+  ...props
+}: React.ComponentProps<"div">) {
   return (
-    <div className={cn("rounded-2xl border border-border bg-card", className)}>{children}</div>
+    <div className={cn("rounded-2xl border border-border bg-card", className)} {...props}>
+      {children}
+    </div>
   );
 }
 
@@ -129,6 +135,27 @@ export function CompanyPage({ data }: { data: CompanyPageData }) {
   const [selectedDocument, setSelectedDocument] = useState("");
   const [isFavorite, setIsFavorite] = useState(false);
   const [animateHeart, setAnimateHeart] = useState(false);
+  const [activeNav, setActiveNav] = useState("");
+
+  // Scrollspy — highlight the in-page nav item for the section on screen.
+  useEffect(() => {
+    const ids = ["overview", "services", "proof", "team", "reviews"];
+    const els = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+    if (!els.length) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        const top = entries
+          .filter((e) => e.isIntersecting)
+          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)[0];
+        if (top) setActiveNav(top.target.id);
+      },
+      { rootMargin: "-25% 0px -65% 0px" },
+    );
+    els.forEach((el) => obs.observe(el));
+    return () => obs.disconnect();
+  }, []);
   const [activeVideo, setActiveVideo] = useState<string | null>(null);
   const [showFullAbout, setShowFullAbout] = useState(false);
   const [showReadMore, setShowReadMore] = useState(false);
@@ -192,6 +219,17 @@ useEffect(() => {
   people: !!data.people?.length,
   reviews: !!data.reviews?.length,
 };
+
+// Order matches the on-page scroll order so the scrollspy highlight moves
+// monotonically. (Physically moving "Track record" above Team is a separate
+// follow-up.)
+const navItems = [
+  { id: "overview", label: "Overview", on: show.overview },
+  { id: "services", label: "Services", on: show.products },
+  { id: "team", label: "Team", on: show.people },
+  { id: "proof", label: "Track record", on: show.stats || show.traction || show.funding },
+  { id: "reviews", label: "Reviews", on: show.reviews },
+].filter((x) => x.on);
 const ReviewCard = ({ r, tall = false }: { r: CompanyReview; tall?: boolean }) => (
   <div
     className={cn(
@@ -266,6 +304,53 @@ className="group relative w-[180px] overflow-hidden rounded-2xl border border-bo
       {/* Header */}
 <section className="w-full overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm sm:p-8">
     <div className="relative z-10 ">
+      {/* Page like — Facebook-style. Local only for now; the count will be
+          wired to the backend later. */}
+      <button
+        type="button"
+        aria-label={isFavorite ? "Unlike this page" : "Like this page"}
+        onClick={() => {
+          setIsFavorite(!isFavorite);
+          setAnimateHeart(true);
+          setTimeout(() => setAnimateHeart(false), 600);
+        }}
+        className="absolute top-0 right-0 z-20 grid size-11 place-items-center overflow-visible rounded-full transition-colors"
+      >
+        {animateHeart && (
+          <>
+            <span className="heart-particle top-[-18px] left-1/2" style={{ "--tx": "0px", "--ty": "-40px" } as React.CSSProperties}>
+              <Heart className="size-3 fill-destructive text-destructive" />
+            </span>
+            <span className="heart-particle left-[-22px] top-1/2" style={{ "--tx": "-35px", "--ty": "-10px" } as React.CSSProperties}>
+              <Heart className="size-3 fill-destructive text-destructive" />
+            </span>
+            <span className="heart-particle right-[-22px] top-1/2" style={{ "--tx": "35px", "--ty": "-10px" } as React.CSSProperties}>
+              <Heart className="size-3 fill-destructive text-destructive" />
+            </span>
+            <span className="heart-particle left-[-10px] bottom-[-18px]" style={{ "--tx": "-25px", "--ty": "25px" } as React.CSSProperties}>
+              <Heart className="size-3 fill-destructive text-destructive" />
+            </span>
+            <span className="heart-particle right-[-10px] bottom-[-18px]" style={{ "--tx": "25px", "--ty": "25px" } as React.CSSProperties}>
+              <Heart className="size-3 fill-destructive text-destructive" />
+            </span>
+          </>
+        )}
+        <span
+          className={cn(
+            "grid size-11 place-items-center rounded-full transition-all duration-300",
+            isFavorite ? "scale-110 bg-destructive/10" : "bg-muted hover:bg-destructive/10",
+          )}
+        >
+          <Heart
+            className={cn(
+              "size-5 transition-all duration-300",
+              animateHeart && "animate-heart",
+              isFavorite ? "scale-125 fill-destructive text-destructive" : "text-muted-foreground",
+            )}
+          />
+        </span>
+      </button>
+
 <div className="flex min-w-0 flex-col gap-6 md:flex-row md:items-start">
    <div className="grid size-25 place-items-center rounded-full border-4 border-background bg-card shadow-lg">
   {data.logoUrl ? (
@@ -316,9 +401,29 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
   </div>
 
 </section>
+
+          {navItems.length > 1 && (
+            <nav className="sticky top-16 z-30 flex gap-1 overflow-x-auto rounded-xl border border-border bg-card/90 px-2 py-1.5 shadow-sm backdrop-blur">
+              {navItems.map((n) => (
+                <a
+                  key={n.id}
+                  href={`#${n.id}`}
+                  className={cn(
+                    "shrink-0 rounded-lg px-3 py-1.5 text-sm font-medium transition-colors",
+                    activeNav === n.id
+                      ? "bg-primary/10 text-primary"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {n.label}
+                </a>
+              ))}
+            </nav>
+          )}
+
           {/* Overview */}
           {show.overview && (
-            <Card className="p-5 sm:p-6">
+            <Card id="overview" className="scroll-mt-28 p-5 sm:p-6">
               <h2 className="text-lg font-bold">About {data.name}</h2>
               {data.about ? (
   <>
@@ -349,7 +454,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
 <Card className="overflow-hidden">
   <div className="space-y-10 p-5 sm:p-6">
     {show.products && (
-      <div>
+      <div id="services" className="scroll-mt-28">
         <h2 className="text-lg font-bold">Our Services</h2>
 
         <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
@@ -392,7 +497,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
     )}
 
     {show.people && (
-  <div>
+  <div id="team" className="scroll-mt-28">
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
         <h2 className="text-lg font-bold">Our Team</h2>
@@ -680,14 +785,65 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
         </ul>
       </div>
     )}
-    {show.stats && (
-  <div>
-    <h2 className="text-lg font-bold">Company Highlights</h2>
+    {(show.stats || show.traction || show.funding) && (
+  <div id="proof" className="scroll-mt-24">
+    <h2 className="text-lg font-bold">Track record</h2>
     <p className="mt-1 text-sm text-muted-foreground">
-      Key numbers that show company growth and performance.
+      The numbers, growth and backing behind the work.
     </p>
 
-    <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3">
+    {show.traction && (
+      <div className="mt-6 rounded-xl border border-border p-5">
+        <h3 className="text-sm font-semibold text-muted-foreground">{data.traction!.title}</h3>
+        <div className="mt-5 flex h-32 items-end gap-2 sm:gap-4">
+          {(() => {
+            const max = Math.max(...data.traction!.points.map((p) => p.value)) || 1;
+            return data.traction!.points.map((p) => (
+              <div key={p.label} className="flex flex-1 flex-col items-center gap-2">
+                <span className="text-2xs font-medium text-foreground">{p.value}</span>
+                <div
+                  className="w-full rounded-t-md bg-primary/80"
+                  style={{ height: `${Math.max((p.value / max) * 100, 4)}%` }}
+                />
+                <span className="text-2xs text-muted-foreground">{p.label}</span>
+              </div>
+            ));
+          })()}
+        </div>
+      </div>
+    )}
+
+    {show.funding && (
+      <div className="mt-6 rounded-xl border border-border p-5">
+        <h3 className="text-sm font-semibold text-muted-foreground">Funding</h3>
+        <div className="mt-4 grid grid-cols-3 gap-4">
+          <div>
+            <p className="text-lg font-bold text-foreground">{data.funding!.totalRaised}</p>
+            <p className="text-xs text-muted-foreground">Raised</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-foreground">{data.funding!.valuation}</p>
+            <p className="text-xs text-muted-foreground">Valuation</p>
+          </div>
+          <div>
+            <p className="text-lg font-bold text-foreground">{data.funding!.lastRound}</p>
+            <p className="text-xs text-muted-foreground">Last round</p>
+          </div>
+        </div>
+        {data.funding!.investors?.length ? (
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {data.funding!.investors.map((inv) => (
+              <span key={inv} className="rounded-full border border-border bg-muted px-2.5 py-1 text-2xs font-medium text-muted-foreground">
+                {inv}
+              </span>
+            ))}
+          </div>
+        ) : null}
+      </div>
+    )}
+
+    {show.stats && (
+    <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3">
       {data.stats!.map((s, index) => {
         const colors = [
           "bg-primary/10 text-primary",
@@ -728,6 +884,7 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
 );
       })}
     </div>
+    )}
   </div>
 )}
 {/* Removed: hardcoded operating-centres block (placeholder). */}
@@ -879,7 +1036,7 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
 </Card>
 {/* Reviews */}
 {show.reviews && (
-  <Card className="p-5 sm:p-6">
+  <Card id="reviews" className="scroll-mt-28 p-5 sm:p-6">
     <h2 className="text-lg font-bold">Reviews & Testimonials</h2>
 
     <div className="mt-5 grid gap-4 lg:grid-cols-2">
@@ -908,97 +1065,6 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
 
         {/* Right rail (persistent) */}
 <aside className="min-w-0 space-y-5 lg:sticky lg:top-6">
-            <Card className="overflow-hidden p-4">
-  <div className="flex items-center justify-between">
-    <div>
-      <h3 className="text-sm font-bold">
-        Favorite Company
-      </h3>
-
-      <p className="mt-1 text-xs text-muted-foreground">
-        Add to your favorites
-      </p>
-    </div>
-
-    <button
-      onClick={() => {
-        setIsFavorite(!isFavorite);
-
-        setAnimateHeart(true);
-
-        setTimeout(() => {
-          setAnimateHeart(false);
-        }, 600);
-      }}
-      className="relative overflow-visible"
-    >
-      {/* burst */}
-      {animateHeart && (
-  <>
-{/* top */}
-<span
-  className="heart-particle top-[-18px] left-1/2"
-  style={{ "--tx": "0px", "--ty": "-40px" } as React.CSSProperties}
->
-    <Heart className="size-3 fill-destructive text-destructive" />
-</span>
-
-{/* left */}
-<span
-  className="heart-particle left-[-22px] top-1/2"
-  style={{ "--tx": "-35px", "--ty": "-10px" } as React.CSSProperties}
->
-    <Heart className="size-3 fill-destructive text-destructive" />
-</span>
-
-{/* right */}
-<span
-  className="heart-particle right-[-22px] top-1/2"
-  style={{ "--tx": "35px", "--ty": "-10px" } as React.CSSProperties}
->
-  <Heart className="size-3 fill-destructive text-destructive" />
-</span>
-
-{/* bottom left */}
-{/* bottom left */}
-<span
-  className="heart-particle left-[-10px] bottom-[-18px]"
-  style={{ "--tx": "-25px", "--ty": "25px" } as React.CSSProperties}
->  <Heart className="size-3 fill-destructive text-destructive" />
-</span>
-
-{/* bottom right */}
-{/* bottom right */}
-<span
-  className="heart-particle right-[-10px] bottom-[-18px]"
-  style={{ "--tx": "25px", "--ty": "25px" } as React.CSSProperties}
->  <Heart className="size-3 fill-destructive text-destructive" />
-</span>
-
-    
-  </>
-)}
-      <div
-        className={cn(
-          "grid size-11 place-items-center rounded-full transition-all duration-300",
-          isFavorite
-            ? "bg-destructive/10 scale-110"
-            : "bg-muted hover:bg-destructive/10"
-        )}
-      >
-        <Heart
-          className={cn(
-  "size-5 transition-all duration-300",
-  animateHeart && "animate-heart",
-            isFavorite
-              ? "fill-destructive text-destructive scale-125"
-              : "text-muted-foreground"
-          )}
-        />
-      </div>
-    </button>
-  </div>
-</Card>
   <Card className="p-5">
     <h3 className="text-lg font-bold">Quick Facts</h3>
 
