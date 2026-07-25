@@ -22,6 +22,45 @@ function initials(name: string) {
 }
 
 export const sampleFounders: Record<string, FounderProfileData> = {
+  sndatarkar: {
+    handle: "sndatarkar",
+    name: "Shubham Datarkar",
+    verified: true,
+    headline: "Founder at Rajmudra Media · Growth marketing for Indian startups",
+    location: "Pune, Maharashtra, India",
+    avatarUrl: "https://picsum.photos/seed/shubham/200/200",
+    avatarText: "SD",
+    bannerClass: "bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-900",
+    followers: 12_400,
+    connections: "500+",
+    openTo: ["New marketing clients", "Speaking & workshops", "Hiring marketers"],
+    currentCompany: { name: "Rajmudra Media", handle: "rajmudra-media", logoText: "RM" },
+    about:
+      "I run Rajmudra Media, a performance-and-brand marketing studio for early-stage Indian startups. We've helped founders turn a first ad rupee into a repeatable growth engine — paid, organic and lifecycle under one roof.\n\nBefore Rajmudra I led growth at two consumer startups. I care about marketing that compounds: clean tracking, honest reporting, and creative that actually converts.",
+    experience: [
+      {
+        role: "Founder",
+        company: "Rajmudra Media",
+        companyHandle: "rajmudra-media",
+        type: "Full-time",
+        start: "2021",
+        location: "Pune, India",
+        logoText: "RM",
+        description:
+          "Built a full-service marketing studio serving 40+ Indian startups across D2C, SaaS and fintech. Paid acquisition, SEO, content and lifecycle — run as one pod per client.",
+      },
+      {
+        role: "Head of Growth",
+        company: "Freshcart",
+        type: "Full-time",
+        start: "2018",
+        end: "2021",
+        logoText: "F",
+        description:
+          "Owned performance marketing and retention for a grocery D2C brand. Scaled monthly orders 6x while holding CAC flat.",
+      },
+    ],
+  },
   elonmusk: {
     handle: "elonmusk",
     name: "Elon Musk",
@@ -292,6 +331,131 @@ export const sampleFounders: Record<string, FounderProfileData> = {
 };
 
 export const sampleStartups: Record<string, CompanyPageData> = {
+  "rajmudra-media": {
+    slug: "rajmudra-media",
+    name: "Rajmudra Media",
+    verified: true,
+    tagline: "Performance & brand marketing studio for Indian startups.",
+    industry: "Marketing",
+    location: "Pune, Maharashtra, India",
+    logoUrl: "https://picsum.photos/seed/rajmudra-logo/100/100",
+    logoText: "RM",
+    bannerClass: "bg-gradient-to-br from-violet-950 via-purple-900 to-fuchsia-900",
+    followers: 18_600,
+    employeesLabel: "24 employees",
+    website: "https://rajmudramedia.in",
+    upvotes: 342,
+    commentsCount: 48,
+    topics: ["Marketing", "Growth", "D2C", "SEO", "Branding", "Content"],
+    about:
+      "Rajmudra Media is a performance-and-brand marketing studio built for early-stage Indian founders. We run paid acquisition, SEO, content and lifecycle marketing as a single pod per client — so growth compounds instead of scattering across five vendors.\n\nSince 2021 we've worked with 40+ startups across D2C, SaaS and fintech, turning first ad spends into repeatable, measurable growth engines. Fixed scope, fixed price, honest reporting.",
+    overview: {
+      website: "https://rajmudramedia.in",
+      industry: "Marketing & Advertising",
+      companySize: "11–50 employees",
+      headquarters: "Pune, India",
+      founded: "2021",
+      type: "Privately Held · Studio",
+      specialties: [
+        "Performance Marketing",
+        "SEO",
+        "Content & Social",
+        "Lifecycle & Email",
+        "Brand & Creative",
+        "Landing-page CRO",
+      ],
+    },
+    stats: [
+      { label: "Startups served", value: "40+" },
+      { label: "Avg. ROAS", value: "3.8x" },
+      { label: "Ad spend managed", value: "₹12Cr+" },
+      { label: "Team", value: "24" },
+      { label: "Founded", value: "2021" },
+      { label: "NPS", value: "72" },
+    ],
+    traction: {
+      title: "Active retainers per year",
+      points: [
+        { label: "2021", value: 6 },
+        { label: "2022", value: 14 },
+        { label: "2023", value: 22 },
+        { label: "2024", value: 31 },
+      ],
+    },
+    products: [
+      {
+        name: "Launch",
+        tag: "₹15,000 / mo",
+        description: "One paid channel, four content pieces a month, a landing page and a monthly report.",
+        image: "https://picsum.photos/seed/rm-launch/400/300",
+      },
+      {
+        name: "Growth",
+        tag: "₹25,000 / mo",
+        description: "Two channels, SEO, lifecycle email and a bi-weekly review — the full growth stack.",
+        image: "https://picsum.photos/seed/rm-growth/400/300",
+      },
+      {
+        name: "Scale",
+        tag: "₹50,000 / mo",
+        description: "A dedicated pod with a strategist and creative production for post-PMF startups.",
+        image: "https://picsum.photos/seed/rm-scale/400/300",
+      },
+    ],
+    people: [
+      { name: "Shubham Datarkar", role: "Founder & Growth Lead", handle: "sndatarkar", avatarText: "SD", bio: "Runs performance and strategy across accounts.", image: "https://picsum.photos/seed/shubham/200/200" },
+      { name: "Aditi Kulkarni", role: "Head of Content & SEO", avatarText: "AK", bio: "Owns organic — content strategy, briefs and technical SEO.", image: "https://picsum.photos/seed/aditi/200/200" },
+      { name: "Rohan Pillai", role: "Performance Marketing Lead", avatarText: "RP", bio: "Meta, Google and LinkedIn paid acquisition.", image: "https://picsum.photos/seed/rohan/200/200" },
+      { name: "Sneha Rao", role: "Creative Director", avatarText: "SR", bio: "Brand systems, ad creative and landing pages.", image: "https://picsum.photos/seed/sneha/200/200" },
+    ],
+    reviews: [
+      {
+        client: "Ankit Bansal",
+        company: "Nourish D2C",
+        rating: 5,
+        review: "Rajmudra took us from scattered agencies to one team that actually owns the number. ROAS up, reporting finally honest.",
+      },
+      {
+        client: "Priya Nair",
+        company: "LedgerPro SaaS",
+        rating: 5,
+        review: "The content and SEO engine they built still compounds months later. Worth every rupee.",
+      },
+    ],
+    updates: [
+      {
+        text: "Wrapped Q1 for a D2C client — 4.2x blended ROAS and a 38% lift in repeat orders off the new lifecycle flows.",
+        date: "3d",
+        likes: 640,
+        comments: 42,
+        reposts: 18,
+      },
+      {
+        text: "We're hiring a Performance Marketing Associate in Pune. If you love clean tracking and creative testing, come build with us.",
+        date: "1w",
+        likes: 210,
+        comments: 27,
+        reposts: 9,
+      },
+    ],
+    leadership: [
+      { name: "Shubham Datarkar", role: "Founder & Growth Lead", handle: "sndatarkar", avatarText: "SD" },
+      { name: "Aditi Kulkarni", role: "Head of Content & SEO", avatarText: "AK" },
+    ],
+    jobs: [
+      { title: "Performance Marketing Associate", location: "Pune, India", type: "Full-time" },
+      { title: "Content Writer (SaaS)", location: "Remote", type: "Full-time" },
+      { title: "Paid Social Specialist", location: "Pune, India", type: "Contract" },
+    ],
+    links: [
+      { label: "Website", href: "https://rajmudramedia.in" },
+      { label: "Case studies", href: "https://rajmudramedia.in/work" },
+    ],
+    alsoViewed: [
+      { name: "BrightFunnel", slug: "brightfunnel", industry: "Marketing", logoText: "B" },
+      { name: "Storyleaf", slug: "storyleaf", industry: "Marketing", logoText: "S" },
+    ],
+  },
   spacex: {
     slug: "spacex",
     name: "SpaceX",

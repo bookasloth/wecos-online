@@ -30,7 +30,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...studios.map((s) => ({ url: url(`/studios/${s.slug}`) })),
     ...resources.map((r) => ({ url: url(`/resources/${r.slug}`) })),
     ...blogPosts.map((p) => ({ url: url(`/resources/blog/${p.slug}`) })),
-    ...startups.map((s) => ({ url: url(`/venture/${s.slug}`) })),
+    ...startups.map((s) => ({ url: url(`/startup/${s.slug}`) })),
     ...founders.map((f) => ({ url: url(`/${f.handle}`) })),
   ];
 }

@@ -504,6 +504,7 @@ export const reservedHandles = new Set([
   "about", "coffee-clubs", "founders", "membership", "resources", "startups",
   "studios", "validate", "venture", "ventures", "feed", "dashboard",
   "onboarding", "sign-in", "sign-up", "forgot-password", "reset-password", "api",
+  "business", "venture",
   "robots.txt", "sitemap.xml", "favicon.ico",
   // likely future routes
   "pricing", "blog", "help", "docs", "events", "marketplace", "jobs", "search",
