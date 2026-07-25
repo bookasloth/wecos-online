@@ -27,7 +27,6 @@ import {
   FaFacebookF,
   FaYoutube,
   FaXTwitter,
-  FaWhatsapp,
 } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
@@ -509,7 +508,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
       
     </div>
 
-    <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
+    <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       {data.people!.map((m, index) => {
         const colors = [
           "from-primary/20 to-primary/10 text-primary",
@@ -523,26 +522,9 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
         return (
           <div
             key={m.name}
-  className="
-    group
-    relative
-    overflow-hidden
-    rounded-2xl
-    border
-    border-border
-    bg-card
-    p-5
-    text-center
-    shadow-sm
-    transition-all
-    duration-300
-    min-h-[250px]
-    hover:border-primary
-  "
+  className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 shadow-sm transition-colors hover:border-primary/40"
 >
-  <div className="absolute" />
-
-<div className="mx-auto h-20 w-20 overflow-hidden rounded-full border-4 border-background shadow-md">
+<div className="size-12 shrink-0 overflow-hidden rounded-full border-2 border-background shadow-sm">
     {m.image ? (
     <img
       src={m.image}
@@ -552,7 +534,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
   ) : (
     <div
       className={cn(
-        "grid h-full w-full place-items-center bg-gradient-to-br text-lg font-bold",
+        "grid h-full w-full place-items-center bg-gradient-to-br text-sm font-bold",
         colors[index % colors.length]
       )}
     >
@@ -561,71 +543,10 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
   )}
 </div>
 
-            <h3 className="mt-4 text-base font-bold text-foreground">
-              {m.name}
-            </h3>
-
-            <p className="mt-1 min-h-[40px] text-sm leading-5 text-muted-foreground">
-              {m.role}
-            </p>
-            {m.bio && (
-<p className="min-h-[70px] text-xs leading-5 text-muted-foreground">
-      {m.bio}
-  </p>
-)}
-
-<div
-  className="
-    mt-4
-    flex
-    flex-wrap
-    justify-center
-    gap-2
-    opacity-0
-    max-h-0
-    overflow-hidden
-    transition-all
-    duration-300
-    group-hover:max-h-20
-    group-hover:opacity-100
-  "
->
-      <a
-    href="#"
-    className="grid size-9 place-items-center rounded-lg bg-[#0A66C2]/10 text-[#0A66C2] transition hover:scale-110"
-  >
-    <FaLinkedinIn className="text-sm" />
-  </a>
-
-  <a
-    href="#"
-    className="grid size-9 place-items-center rounded-lg bg-muted text-foreground transition hover:scale-110"
-  >
-    <FaXTwitter className="text-sm" />
-  </a>
-
-  <a
-    href="#"
-    className="grid size-9 place-items-center rounded-lg bg-pink-500/10 text-pink-500 transition hover:scale-110"
-  >
-    <FaInstagram className="text-sm" />
-  </a>
-
-  <a
-    href="#"
-    className="grid size-9 place-items-center rounded-lg bg-info/10 text-info transition hover:scale-110"
-  >
-    <FaFacebookF className="text-sm" />
-  </a>
-
-  {/* WhatsApp */}
-  <a
-    href="#"
-    className="grid size-9 place-items-center rounded-lg bg-success/10 text-success transition hover:scale-110"
-  >
-    <FaWhatsapp className="text-sm" />
-  </a>
-</div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-bold text-foreground">{m.name}</p>
+              <p className="truncate text-xs text-muted-foreground">{m.role}</p>
+            </div>
           </div>
         );
       })}
