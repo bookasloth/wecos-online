@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Clock, Calendar } from "lucide-react";
 import { Container } from "@/components/layout/container";
-import { blogPosts, getAllCategories } from "@/lib/blog-data";
+import {blogPosts} from "@/lib/blog-data";
 
 export const metadata: Metadata = {
   title: "Blog",
@@ -11,7 +11,6 @@ export const metadata: Metadata = {
 };
 
 export default function BlogPage() {
-  const categories = getAllCategories();
   const featuredPost = blogPosts.find((post) => post.featured);
   const regularPosts = blogPosts.filter((post) => !post.featured);
 

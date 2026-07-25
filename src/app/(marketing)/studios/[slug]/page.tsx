@@ -1,256 +1,150 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import type { Metadata } from "next";
 import Link from "next/link";
-import { useParams } from "next/navigation";
-import { BadgeCheck, Crown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { notFound, redirect } from "next/navigation";
+import { ArrowLeft, Check } from "lucide-react";
+import { cn, formatInr } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
-import { studios } from "@/config/site";
-import { startups } from "@/lib/sample/sample-data";
+import {
+  studios,
+  studioBySlug,
+  memberDiscountPct,
+  entryTier,
+} from "@/config/site";
+import { PackageCard } from "@/features/studios/package-card";
+import { StudioEnquiry } from "@/features/studios/studio-enquiry";
 
-const STUDIO_TOPICS: Record<string, string[]> = {
-  technology: ["Technology", "AI", "SaaS", "Developer Tools", "Productivity", "DeepTech", "Hardware", "API", "Space", "Satellites", "Climate"],
-  marketing: ["Marketing", "SEO", "Content", "Growth", "Ads", "Social Media", "Branding"],
-  "human-resource": ["Smart Hiring", "Hiring", "HR", "Recruitment"],
-  accounting: ["Accounting", "Fintech", "Payments"],
-  legal: ["Compliance", "Legal", "IP"],
-};
+export function generateStaticParams() {
+  return studios.map((s) => ({ slug: s.slug }));
+}
 
-export default function StudioPage() {
-  const params = useParams<{ slug: string }>();
-  const slug = params.slug;
-  const found = studios.find((s) => s.slug === slug);
-  const topics = STUDIO_TOPICS[slug] ?? [];
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const studio = studioBySlug(slug);
 
-  const [showEnquiryModal, setShowEnquiryModal] = useState(false);
-  const [selectedStartup, setSelectedStartup] = useState("");
-  const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  if (!studio) return { title: "Studio" };
 
-  const filtered = useMemo(
-    () =>
-      startups.filter((s) =>
-        (s.topics ?? []).some((t) => topics.includes(t))
-      ),
-    [topics]
-  );
+  return {
+    title: studio.name,
+    description: studio.pitch,
+    alternates: { canonical: `/studios/${studio.slug}` },
+  };
+}
 
-  const validateEmail = (value: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+export default async function StudioPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const studio = studioBySlug(slug);
+
+  if (!studio) notFound();
+  // Studios were renamed in WeCos 2.0 (accounting → finance, human-resource → hr).
+  // Old URLs still resolve, then redirect to the canonical one.
+  if (studio.slug !== slug) redirect(`/studios/${studio.slug}`);
+
+  const others = studios.filter((s) => s.slug !== studio.slug);
 
   return (
-    <Container className="py-8 sm:py-12">
-      {/* Header */}
-      <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <p className="text-sm font-bold uppercase tracking-wide text-primary">
-            WeCos Studios
-          </p>
-          <h1 className="mt-1 text-3xl font-bold tracking-tight">
-            {found ? `${found.name} Studio` : "Studio"}
-          </h1>
-          <p className="mt-1.5 text-muted-foreground">
-            {found?.summary ?? "Browse startups in this category."}
-          </p>
-        </div>
-        <p className="text-sm font-medium text-muted-foreground">
-          Showing {filtered.length} startup{filtered.length === 1 ? "" : "s"}
+    <>
+      <Container className="py-12 sm:py-16">
+        <Link
+          href="/studios"
+          className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        >
+          <ArrowLeft className="size-4" />
+          All studios
+        </Link>
+
+        <p className="mt-8 text-2xs font-medium tracking-[1px] text-primary uppercase">
+          WeCos Studios
         </p>
+        <h1 className="mt-3 text-4xl font-normal tracking-tight sm:text-5xl">
+          {studio.name}
+        </h1>
+        <p className="mt-5 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+          {studio.pitch}
+        </p>
+
+        <div className="mt-8 flex flex-wrap gap-3">
+          <StudioEnquiry studioName={studio.name} />
+          <Link
+            href="/membership"
+            className={cn(buttonVariants({ variant: "outline", size: "lg" }))}
+          >
+            Get up to {memberDiscountPct}% off as a member
+          </Link>
+        </div>
+      </Container>
+
+      <div className="border-y border-border bg-muted/30">
+        <Container className="py-14">
+          <h2 className="text-2xs font-medium tracking-[1px] text-muted-foreground uppercase">
+            What the studio does
+          </h2>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {studio.deliverables.map((d) => (
+              <li key={d} className="flex gap-3 text-base leading-relaxed">
+                <Check className="mt-1 size-4 shrink-0 text-primary" />
+                {d}
+              </li>
+            ))}
+          </ul>
+        </Container>
       </div>
 
-      {/* Cards */}
-      {filtered.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-          No startups in this category yet.
-        </div>
-      ) : (
-        <ul className="grid gap-5 sm:gap-6 lg:grid-cols-3">
-          {filtered.map((s) => (
-            <li
-              key={s.slug}
-              className="relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary hover:shadow-md"
-            >
-              <Link
-                href={`/startup/${s.slug}`}
-                className="absolute inset-0 z-0"
-                aria-label={`Go to ${s.name}`}
-              />
+      <Container className="py-16 sm:py-20">
+        <h2 className="text-3xl font-normal tracking-tight">Packages</h2>
+        <p className="mt-3 max-w-xl text-muted-foreground">
+          Fixed scope and fixed price. Members pay up to {memberDiscountPct}% less —{" "}
+          <Link href="/membership" className="font-medium text-primary hover:underline">
+            membership starts at {formatInr(entryTier.priceInr)}/year
+          </Link>
+          .
+        </p>
 
-              {/* Recommended */}
-              <div className="relative z-10 mb-4 mt-2">
-                <div className="flex justify-end">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-bold text-primary">
-                    <Crown className="size-3.5" />
-                    Recommended
-                  </span>
-                </div>
-              </div>
-
-              {/* Top row */}
-              <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                <div className="flex min-w-0 items-start gap-3 sm:gap-4">
-                  <div className="-mt-4 size-20 shrink-0 overflow-hidden rounded-full border border-border bg-muted shadow-sm">
-                    <img
-                      src={s.logoUrl}
-                      alt={`${s.name} logo`}
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
-
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className="truncate text-xl font-bold leading-tight">
-                        {s.name}
-                      </span>
-                      {s.verified && (
-                        <BadgeCheck className="size-5 shrink-0 text-primary" />
-                      )}
-                    </div>
-                    <p className="mt-1 line-clamp-1 text-sm font-medium text-muted-foreground">
-                      {s.industry}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Description */}
-              <p className="relative z-10 mt-5 line-clamp-2 text-sm leading-6 text-muted-foreground">
-                {s.tagline}
-              </p>
-
-              {/* Topics */}
-              <div className="relative z-10 mt-4 flex flex-wrap gap-2">
-                {(s.topics ?? []).slice(0, 6).map((t) => (
-                  <span
-                    key={t}
-                    className="rounded-full border border-border bg-muted px-2 py-0.5 text-[10px] font-medium text-muted-foreground"
-                  >
-                    {t}
-                  </span>
-                ))}
-              </div>
-
-              {/* Stats */}
-              <div className="relative z-10 mt-4 flex flex-wrap items-center gap-3 text-sm text-muted-foreground">
-                <span>Founded {s.overview.founded}</span>
-                <span>·</span>
-                <span>WeCos Joined</span>
-              </div>
-
-              {/* Bottom row */}
-              <div className="relative z-10 mt-auto flex items-center justify-center border-t border-border pt-4">
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    setSelectedStartup(s.name);
-                    setShowEnquiryModal(true);
-                  }}
-                  className={cn(
-                    buttonVariants({ variant: "default" }),
-                    "h-10 px-6 text-sm font-bold"
-                  )}
-                >
-                  Enquire
-                </button>
-              </div>
-            </li>
+        <div
+          className={cn(
+            "mt-10 grid gap-6",
+            studio.packages.length === 2 ? "sm:grid-cols-2" : "lg:grid-cols-3",
+          )}
+        >
+          {studio.packages.map((pkg) => (
+            <PackageCard key={pkg.name} pkg={pkg} studioName={studio.name} />
           ))}
-        </ul>
-      )}
-
-      {/* Enquiry Modal */}
-      {showEnquiryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-card-foreground shadow-2xl">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold">Send Enquiry</h3>
-              <button
-                onClick={() => {
-                  setShowEnquiryModal(false);
-                  setEmail("");
-                  setEmailError("");
-                  setSuccessMessage("");
-                }}
-                className="text-2xl text-muted-foreground hover:text-foreground"
-              >
-                ×
-              </button>
-            </div>
-
-            <p className="mt-2 text-sm text-muted-foreground">
-              Enter your email address and we&apos;ll connect you with{" "}
-              <span className="font-semibold text-foreground">{selectedStartup}</span>.
-            </p>
-
-            <input
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"
-            />
-
-            {emailError && (
-              <p className="mt-2 text-sm font-medium text-destructive">{emailError}</p>
-            )}
-
-            {successMessage && (
-              <p className="mt-2 text-sm font-medium text-success">{successMessage}</p>
-            )}
-
-            <div className="mt-5 flex gap-3">
-              <button
-                onClick={async () => {
-                  setEmailError("");
-                  setSuccessMessage("");
-
-                  if (!email.trim()) {
-                    setEmailError("Email address is required.");
-                    return;
-                  }
-
-                  if (!validateEmail(email)) {
-                    setEmailError("Please enter a valid email address.");
-                    return;
-                  }
-
-                  try {
-                    const response = await fetch("/api/company-enquiry", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({
-                        userEmail: email,
-                        companyName: selectedStartup,
-                        type: "enquiry",
-                      }),
-                    });
-
-                    if (!response.ok) throw new Error();
-
-                    setSuccessMessage("Your enquiry has been submitted successfully.");
-
-                    setTimeout(() => {
-                      setShowEnquiryModal(false);
-                      setSuccessMessage("");
-                      setEmail("");
-                      setSelectedStartup("");
-                    }, 2000);
-                  } catch {
-                    setEmailError("Failed to send enquiry.");
-                  }
-                }}
-                className="flex-1 rounded-xl bg-primary py-3 font-medium text-primary-foreground hover:bg-primary/90"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
         </div>
-      )}
-    </Container>
+
+        <p className="mt-6 text-sm text-muted-foreground">
+          Need something that isn&apos;t listed?{" "}
+          <span className="text-foreground">Ask — most engagements get scoped custom.</span>
+        </p>
+      </Container>
+
+      <div className="border-t border-border">
+        <Container className="py-14">
+          <h2 className="text-2xs font-medium tracking-[1px] text-muted-foreground uppercase">
+            Other studios
+          </h2>
+          <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+            {others.map((s) => (
+              <li key={s.slug}>
+                <Link
+                  href={`/studios/${s.slug}`}
+                  className="block rounded-xl border border-border bg-card p-5 transition-colors hover:border-primary/40"
+                >
+                  <p className="font-medium">{s.name}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">{s.summary}</p>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </Container>
+      </div>
+    </>
   );
 }

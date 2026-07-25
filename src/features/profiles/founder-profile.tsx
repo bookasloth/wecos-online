@@ -177,7 +177,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
         {data.currentCompany && (
           <>
             <span>·</span>
-            <Link href={`/startup/${data.currentCompany.handle}`} className="font-medium text-primary hover:underline">
+            <Link href={`/venture/${data.currentCompany.handle}`} className="font-medium text-primary hover:underline">
               {data.currentCompany.name}
             </Link>
           </>
@@ -208,7 +208,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
   <Badge
     key={o}
     className={cn(
-      "rounded-full border px-2.5 py-1 text-[11px] font-medium",
+      "rounded-full border px-2.5 py-1 text-2xs font-medium",
       OPEN_TO_COLORS[i % OPEN_TO_COLORS.length]
     )}
   >
@@ -249,7 +249,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
       {data.activity.map((p, i) => (
         <li key={i} className="py-3 first:pt-0 last:pb-0">
           <div className="flex gap-2">
-            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-[10px] font-semibold text-white shadow-sm">
+            <span className="grid size-8 shrink-0 place-items-center rounded-full bg-gradient-to-br from-purple-500 to-blue-500 text-3xs font-semibold text-white shadow-sm">
               {data.avatarText}
             </span>
 
@@ -257,14 +257,14 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
               <div className="flex items-center gap-1">
                 <p className="text-xs font-semibold">{data.name}</p>
                 {data.verified && <BadgeCheck className="size-3 text-info" />}
-                <span className="text-[11px] text-muted-foreground">· {p.date}</span>
+                <span className="text-2xs text-muted-foreground">· {p.date}</span>
               </div>
 
               <p className="mt-1 text-xs leading-relaxed text-foreground/90">
                 {p.text}
               </p>
 
-              <div className="mt-2 flex items-center gap-4 text-[11px] text-muted-foreground">
+              <div className="mt-2 flex items-center gap-4 text-2xs text-muted-foreground">
                 <span className="inline-flex items-center gap-1">
                   <ThumbsUp className="size-3" />
                   {compact(p.likes)}
@@ -306,7 +306,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
               {e.company}
               {e.type ? ` · ${e.type}` : ""}
             </p>
-            <p className="text-[11px] text-muted-foreground">
+            <p className="text-2xs text-muted-foreground">
               {e.start} – {e.end ?? "Present"}
               {e.location ? ` · ${e.location}` : ""}
             </p>
@@ -336,7 +336,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
               <p className="text-xs">{[e.degree, e.field].filter(Boolean).join(", ")}</p>
             )}
             {(e.start || e.end) && (
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-2xs text-muted-foreground">
                 {[e.start, e.end].filter(Boolean).join(" – ")}
               </p>
             )}
@@ -353,12 +353,12 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
       <aside className="sticky top-24 space-y-4">
         {data.currentCompany ? (
   <Card className="p-4">
-    <p className="text-[11px] font-semibold tracking-wide text-muted-foreground uppercase">
+    <p className="text-2xs font-semibold tracking-wide text-muted-foreground uppercase">
       Current company
     </p>
 
     <Link
-      href={`/startup/${data.currentCompany.handle}`}
+      href={`/venture/${data.currentCompany.handle}`}
       className="mt-3 flex items-center gap-2 rounded-xl border p-2 transition-colors hover:bg-muted"
     >
       <LogoTile
@@ -367,7 +367,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
 />
       <div>
         <p className="text-sm font-semibold">{data.currentCompany.name}</p>
-        <p className="text-[11px] text-muted-foreground">Aerospace & Space Technology</p>
+        <p className="text-2xs text-muted-foreground">Aerospace & Space Technology</p>
       </div>
     </Link>
 
@@ -387,7 +387,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
     </div>
 
     <Link
-      href={`/startup/${data.currentCompany.handle}`}
+      href={`/venture/${data.currentCompany.handle}`}
       className={cn(buttonVariants({ variant: "outline" }), "mt-3 h-8 w-full text-xs")}
     >
       View Company
@@ -421,12 +421,12 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
     <ul className="mt-3 space-y-2">
       {data.alsoViewed.map((p) => (
         <li key={p.handle} className="flex items-start gap-2">
-          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-[10px] font-semibold text-muted-foreground">
+          <span className="grid size-8 shrink-0 place-items-center rounded-full bg-muted text-3xs font-semibold text-muted-foreground">
             {p.avatarText}
           </span>
           <div className="min-w-0">
             <p className="truncate text-xs font-medium">{p.name}</p>
-            <p className="truncate text-[11px] text-muted-foreground">{p.headline}</p>
+            <p className="truncate text-2xs text-muted-foreground">{p.headline}</p>
           </div>
         </li>
       ))}
@@ -490,7 +490,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
         <Badge
           key={s}
           className={cn(
-            "rounded-full border px-2.5 py-1 text-[11px] font-medium",
+            "rounded-full border px-2.5 py-1 text-2xs font-medium",
             i % 6 === 0 &&
               "border-primary/20 bg-primary/10 text-primary",
             i % 6 === 1 &&

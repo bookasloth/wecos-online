@@ -42,7 +42,7 @@ export default function StartupViewPage() {
         action={
           <div className="flex gap-2">
             <Link
-              href={`/startup/${startup.slug}`}
+              href={`/venture/${startup.slug}`}
               target="_blank"
               className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
             >

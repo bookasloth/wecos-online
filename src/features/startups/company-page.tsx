@@ -1,32 +1,23 @@
 "use client";
-import {useState} from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   BadgeCheck,
   CalendarDays,
   ExternalLink,
-  MessageCircle,
   Rocket,
   TrendingUp,
   Star,
-  Building,
   ShieldCheck,
   Clock,
   Users,
   Building2,
   Play,
-  Mail,
-  Phone,
   MapPin,
   Download,
   AlarmClockCheck,
   FileText,
-  RefreshCw,
-  Satellite,
-  Plane,
   Globe,
-  Cpu,
-  Wrench,
   ArrowRight,
   Heart,
 } from "lucide-react";
@@ -40,8 +31,8 @@ import {
 } from "react-icons/fa6";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
-import { useEffect, useRef,  } from "react";
-import { Badge } from "@/components/ui/badge";
+import { Modal } from "@/components/ui/modal";
+
 export type CompanyReview = {
   client: string;
   company: string;
@@ -127,50 +118,33 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
   );
 }
 
-function OverviewRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="grid grid-cols-[120px_1fr] gap-3 py-2 text-sm">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="text-foreground/90">{children}</span>
-    </div>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-2xl font-bold tracking-tight text-primary">{value}</p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
-}
-
-function PersonAvatar({ text }: { text: string }) {
-  return (
-    <span className="grid size-12 shrink-0 place-items-center rounded-full bg-muted text-sm font-semibold text-muted-foreground">
-      {text}
-    </span>
-  );
-}
-
 export function CompanyPage({ data }: { data: CompanyPageData }) {
-
   const [activeSection, setActiveSection] = useState("services");
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
-const [email, setEmail] = useState("");
-const [successMessage, setSuccessMessage] = useState("");
-const [emailError, setEmailError] = useState("");
-const validateEmail = (email: string) => {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-};
-const [selectedDocument, setSelectedDocument] = useState("");
-const [isFavorite, setIsFavorite] = useState(false);
-const [animateHeart, setAnimateHeart] = useState(false);
-const [activeVideo, setActiveVideo] = useState<string | null>(null);
-const [showFullAbout, setShowFullAbout] = useState(false);
-const [showReadMore, setShowReadMore] = useState(false);
-const videoModalRef = useRef<HTMLDivElement>(null);
-const aboutRef = useRef<HTMLParagraphElement>(null);
+  const [email, setEmail] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const validateEmail = (email: string) => {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+  const [selectedDocument, setSelectedDocument] = useState("");
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [animateHeart, setAnimateHeart] = useState(false);
+  const [activeVideo, setActiveVideo] = useState<string | null>(null);
+  const [showFullAbout, setShowFullAbout] = useState(false);
+  const [showReadMore, setShowReadMore] = useState(false);
+  const videoModalRef = useRef<HTMLDivElement>(null);
+  const aboutRef = useRef<HTMLParagraphElement>(null);
+  const closeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clears the "close the modal in 2s" timer if the page unmounts first,
+  // so the success handler never sets state on an unmounted tree.
+  useEffect(() => {
+    return () => {
+      if (closeTimerRef.current) clearTimeout(closeTimerRef.current);
+    };
+  }, []);
+
 useEffect(() => {
   if (!activeVideo) return;
 
@@ -189,12 +163,9 @@ useEffect(() => {
   };
 }, [activeVideo]);
 
-useEffect(() => {
-  if (!aboutRef.current) return;
-
-  const el = aboutRef.current;
-  setShowReadMore(el.scrollHeight > el.clientHeight);
-}, [data.about]);
+// Shows the "read more" toggle only when the about copy overflows 8 lines.
+// (There used to be a second effect here computing the same flag from
+// clientHeight; it always lost the race to this one, so it was dead code.)
 useEffect(() => {
   const el = aboutRef.current;
 
@@ -410,8 +381,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
         <h2 className="text-lg font-bold">Our Services</h2>
 
         <div className="mt-4 grid gap-5 sm:grid-cols-2 lg:grid-cols-2">
-          {data.products!.map((p, index) => {
-
+          {data.products!.map((p) => {
             return (
               <div
                 key={p.name}
@@ -1271,20 +1241,21 @@ className="flex min-w-0 items-center justify-between gap-3 py-1"      >
 </Card>
 </aside>
 {showEnquiryModal && (
-  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-<div className="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-2xl border border-border bg-card p-5 text-card-foreground shadow-2xl sm:p-6">
-        <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold">
-          Send Enquiry
-        </h3>
-
-        <button
-          onClick={() => setShowEnquiryModal(false)}
-          className="text-2xl text-muted-foreground hover:text-foreground"
-        >
-          ×
-        </button>
-      </div>
+  <Modal
+    title="Send Enquiry"
+    onClose={() => setShowEnquiryModal(false)}
+    panelClassName="max-h-[90vh] overflow-y-auto p-5 sm:p-6"
+    titleAction={
+      <button
+        type="button"
+        aria-label="Close"
+        onClick={() => setShowEnquiryModal(false)}
+        className="text-2xl text-muted-foreground hover:text-foreground"
+      >
+        ×
+      </button>
+    }
+  >
 
       <p className="mt-2 text-sm text-muted-foreground">
         {selectedDocument
@@ -1297,7 +1268,7 @@ className="flex min-w-0 items-center justify-between gap-3 py-1"      >
   placeholder="Enter your email"
   value={email}
   onChange={(e) => setEmail(e.target.value)}
-className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground focus:border-primary"/>
+className="mt-5 w-full rounded-xl border border-border bg-background px-4 py-3 text-foreground outline-none placeholder:text-muted-foreground focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-ring/50"/>
 
 {emailError && (
   <p className="mt-2 text-sm font-medium text-destructive">
@@ -1328,30 +1299,27 @@ onClick={async () => {
   }
 
   try {
-    const documentLinks: Record<string, string> = {
-      "Company Profile": "/documents/company-profile.pdf",
-      "Brochure": "/documents/brochure.pdf",
-      "Pitch Deck": "/documents/pitch-deck.pdf",
-      "Catalogue": "/documents/catalogue.pdf",
-      "Rate Card": "/documents/rate-card.pdf",
-    };
-
+    // The download link is derived server-side from `documentName` — sending it
+    // from here would let anyone point a WeCos-branded email at any URL.
     const response = await fetch("/api/company-enquiry", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        userEmail: email,
-        companyName: data.name,
-        type: selectedDocument ? "document" : "enquiry",
-        documentName: selectedDocument,
-        documentLink: selectedDocument
-          ? `${window.location.origin}${
-              documentLinks[selectedDocument]
-            }`
-          : "",
-      }),
+      body: JSON.stringify(
+        selectedDocument
+          ? {
+              type: "document",
+              userEmail: email,
+              companyName: data.name,
+              documentName: selectedDocument,
+            }
+          : {
+              type: "enquiry",
+              userEmail: email,
+              companyName: data.name,
+            },
+      ),
     });
 
     if (!response.ok) {
@@ -1364,7 +1332,7 @@ onClick={async () => {
         : "Your enquiry has been submitted successfully."
     );
 
-    setTimeout(() => {
+    closeTimerRef.current = setTimeout(() => {
       setShowEnquiryModal(false);
       setSuccessMessage("");
       setEmail("");
@@ -1382,13 +1350,15 @@ onClick={async () => {
           Submit
         </button>
       </div>
-    </div>
-  </div>
+  </Modal>
 )}
       </div>
       {activeVideo && (
 <div
   ref={videoModalRef}
+  role="dialog"
+  aria-modal="true"
+  aria-label={`${data.name} testimonial video`}
   tabIndex={-1}
   className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 outline-none"
   onClick={() => setActiveVideo(null)}

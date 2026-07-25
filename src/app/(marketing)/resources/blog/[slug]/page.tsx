@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowLeft, Clock, Calendar, FolderOpen, ChevronRight, ChevronUp } from "lucide-react";
+import { Clock, Calendar, FolderOpen, ChevronRight } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { blogPosts, getBlogPostBySlug } from "@/lib/blog-data";
 import { BlogDetailActions, NewsletterForm } from "./blog-detail-actions";

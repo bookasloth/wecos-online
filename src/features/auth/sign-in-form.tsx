@@ -10,6 +10,7 @@ import { useAppStore } from "@/lib/store/app-store";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { SocialAuth } from "@/features/auth/social-auth";
 
 export function SignInForm() {
   const router = useRouter();
@@ -51,9 +52,11 @@ export function SignInForm() {
           Forgot password?
         </Link>
       </div>
-      <Button type="submit" disabled={isSubmitting} className="h-10 w-full">
-        Sign in
+      <Button type="submit" disabled={isSubmitting} size="lg" className="w-full">
+        {isSubmitting ? "Signing in…" : "Sign in"}
       </Button>
+
+      <SocialAuth label="Sign in" />
     </form>
   );
 }

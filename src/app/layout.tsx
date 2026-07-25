@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist_Mono } from "next/font/google";
-import { Toaster } from "sonner";
 import { AppProviders } from "@/providers/app-providers";
+import { siteConfig } from "@/config/site";
 // Self-hosted Open Sauce Sans (matches existing WeCos brand). Latin subset only.
 import "@fontsource/open-sauce-sans/latin-400.css";
 import "@fontsource/open-sauce-sans/latin-500.css";
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
   },
   description:
     "Build better, prove faster, grow stronger. WeCos helps founders turn ideas into validated startups — powered by AI systems and guided by human mentors.",
-  metadataBase: new URL("https://www.wecos.co"),
+  metadataBase: new URL(siteConfig.url),
 };
 
 export default function RootLayout({
@@ -38,10 +38,7 @@ export default function RootLayout({
       className={`${fontMono.variable} h-full`}
     >
       <body className="min-h-full flex flex-col">
-        <AppProviders>
-          {children}
-          <Toaster richColors position="top-center" />
-        </AppProviders>
+        <AppProviders>{children}</AppProviders>
       </body>
     </html>
   );

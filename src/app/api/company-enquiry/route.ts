@@ -1,81 +1,86 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { z } from "zod";
+import { enquiryDocuments, siteConfig } from "@/config/site";
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
+/**
+ * Escapes a value before it is interpolated into email HTML.
+ *
+ * Every field below originates from an unauthenticated POST body, so anything
+ * that reaches a template must go through here. Without it, a crafted
+ * `companyName` can close the surrounding tag and inject arbitrary markup into
+ * the inbox of whoever receives the mail.
+ */
+const esc = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 
-    const documentEmails: Record<
-      string,
-      {
-        subject: string;
-        title: string;
-        description: string;
-        button: string;
-      }
-    > = {
-      "Company Profile": {
-        subject: "Your Company Profile is ready",
-        title: "Download Company Profile",
-        description:
-          "Thank you for requesting the company profile. This document contains the company overview, services and capabilities.",
-        button: "Download Company Profile",
-      },
-      Brochure: {
-        subject: "Your Brochure is ready",
-        title: "Download Brochure",
-        description:
-          "Thank you for requesting the brochure. Explore the products and services in detail.",
-        button: "Download Brochure",
-      },
-      "Pitch Deck": {
-        subject: "Your Pitch Deck is ready",
-        title: "Download Pitch Deck",
-        description:
-          "Thank you for requesting the pitch deck. Explore the vision, business model and growth plans.",
-        button: "Download Pitch Deck",
-      },
-      Catalogue: {
-        subject: "Your Catalogue is ready",
-        title: "Download Catalogue",
-        description:
-          "Thank you for requesting the catalogue. Browse the complete offerings.",
-        button: "Download Catalogue",
-      },
-      "Rate Card": {
-        subject: "Your Rate Card is ready",
-        title: "Download Rate Card",
-        description:
-          "Thank you for requesting the latest pricing information.",
-        button: "Download Rate Card",
-      },
-    };
+const documentLabels = enquiryDocuments.map((d) => d.label) as [
+  string,
+  ...string[],
+];
 
-    const selectedDoc =
-      body.type === "document"
-        ? documentEmails[body.documentName] ?? documentEmails["Company Profile"]
-        : null;
+/**
+ * NOTE: `documentLink` is deliberately absent from this schema. It used to be
+ * read from the request body, which let any caller send a WeCos-branded email,
+ * from the WeCos SMTP account, to an arbitrary address, containing an arbitrary
+ * link. The download URL is now derived server-side from the document enum.
+ */
+const enquirySchema = z.discriminatedUnion("type", [
+  z.object({
+    type: z.literal("enquiry"),
+    userEmail: z.email().max(254),
+    companyName: z.string().trim().min(1).max(200),
+  }),
+  z.object({
+    type: z.literal("document"),
+    userEmail: z.email().max(254),
+    companyName: z.string().trim().min(1).max(200),
+    documentName: z.enum(documentLabels),
+  }),
+]);
 
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_APP_PASSWORD,
-      },
-    });
+/**
+ * Per-IP throttle. In-memory, so it resets on deploy and is per-instance — it
+ * blunts casual abuse of an endpoint that sends two emails per request through
+ * an authenticated Gmail account. Not a substitute for a real edge rate limiter.
+ *
+ * ponytail: Map + fixed window, swap for an edge/Redis limiter if the site ever
+ * runs more than one instance and the abuse is real rather than theoretical.
+ */
+const RATE_LIMIT = 5;
+const RATE_WINDOW_MS = 60_000;
+const hits = new Map<string, { count: number; resetAt: number }>();
 
-    await transporter.sendMail({
-      from: `"WeCos" <${process.env.SMTP_EMAIL}>`,
-      to: process.env.SMTP_EMAIL,
-      subject:
-        body.type === "document"
-          ? `Document Requested: ${body.documentName}`
-          : "New Enquiry",
-      html: `
+function rateLimited(ip: string) {
+  const now = Date.now();
+  const entry = hits.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    hits.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS });
+    return false;
+  }
+
+  entry.count += 1;
+  return entry.count > RATE_LIMIT;
+}
+
+function adminEmailHtml(input: {
+  heading: string;
+  companyName: string;
+  userEmail: string;
+  type: string;
+  documentName: string;
+}) {
+  return `
         <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
           <div style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);padding:25px;color:white">
             <h1 style="margin:0">
-              ${body.type === "document" ? "New Document Request" : "New Company Enquiry"}
+              ${input.heading}
             </h1>
             <p>A new request has been submitted through WeCos.</p>
           </div>
@@ -84,19 +89,19 @@ export async function POST(req: Request) {
             <table style="width:100%">
               <tr>
                 <td><b>Company</b></td>
-                <td>${body.companyName}</td>
+                <td>${esc(input.companyName)}</td>
               </tr>
               <tr>
                 <td><b>User Email</b></td>
-                <td>${body.userEmail}</td>
+                <td>${esc(input.userEmail)}</td>
               </tr>
               <tr>
                 <td><b>Type</b></td>
-                <td>${body.type}</td>
+                <td>${esc(input.type)}</td>
               </tr>
               <tr>
                 <td><b>Document</b></td>
-                <td>${body.documentName || "N/A"}</td>
+                <td>${esc(input.documentName)}</td>
               </tr>
               <tr>
                 <td><b>Date</b></td>
@@ -105,27 +110,22 @@ export async function POST(req: Request) {
             </table>
           </div>
         </div>
-      `,
-    });
+      `;
+}
 
-    await transporter.sendMail({
-      from: `"WeCos" <${process.env.SMTP_EMAIL}>`,
-      to: body.userEmail,
-      subject:
-        body.type === "document"
-          ? selectedDoc?.subject
-          : "We received your enquiry",
-
-      html:
-        body.type === "document"
-          ? `
+function documentEmailHtml(input: {
+  doc: (typeof enquiryDocuments)[number];
+  companyName: string;
+  downloadUrl: string;
+}) {
+  return `
             <div style="max-width:600px;margin:0 auto;padding:40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#ffffff;">
               <div style="margin-bottom:30px">
-                <img src="https://wecos.online/logo.png" width="40" alt="WeCos" />
+                <img src="${siteConfig.url}/logo.png" width="40" alt="WeCos" />
               </div>
 
               <h1 style="font-size:40px;font-weight:700;color:#1f2937;margin:0 0 25px 0;">
-                ${selectedDoc?.title}
+                ${input.doc.title}
               </h1>
 
               <p style="font-size:20px;line-height:1.7;color:#374151;margin-bottom:20px;">
@@ -133,17 +133,17 @@ export async function POST(req: Request) {
               </p>
 
               <p style="font-size:20px;line-height:1.7;color:#374151;margin-bottom:20px;">
-                ${selectedDoc?.description}
+                ${input.doc.description}
               </p>
 
               <div style="background:#f8fafc;padding:20px;border-radius:10px;margin:30px 0;">
-                <p><b>Company:</b> ${body.companyName}</p>
-                <p><b>Document:</b> ${body.documentName}</p>
+                <p><b>Company:</b> ${esc(input.companyName)}</p>
+                <p><b>Document:</b> ${input.doc.label}</p>
                 <p><b>Requested:</b> ${new Date().toLocaleString()}</p>
               </div>
 
-              <a href="${body.documentLink}" style="background:#7c3aed;color:#ffffff;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:600;display:inline-block;margin-bottom:50px;">
-                ${selectedDoc?.button}
+              <a href="${input.downloadUrl}" style="background:#7c3aed;color:#ffffff;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:600;display:inline-block;margin-bottom:50px;">
+                ${input.doc.button}
               </a>
 
               <p style="font-size:20px;color:#374151;margin-top:20px;">
@@ -162,11 +162,14 @@ export async function POST(req: Request) {
                 Made by WeCos Technologies Pvt Ltd
               </p>
             </div>
-          `
-          : `
+          `;
+}
+
+function enquiryEmailHtml(input: { companyName: string }) {
+  return `
             <div style="max-width:600px;margin:0 auto;padding:40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#ffffff;">
               <div style="margin-bottom:30px">
-                <img src="https://wecos.online/logo.png" width="40" alt="WeCos" />
+                <img src="${siteConfig.url}/logo.png" width="40" alt="WeCos" />
               </div>
 
               <h1 style="font-size:40px;font-weight:700;color:#1f2937;margin:0 0 25px 0;">
@@ -179,11 +182,11 @@ export async function POST(req: Request) {
 
               <p style="font-size:20px;line-height:1.7;color:#374151;margin-bottom:20px;">
                 Thank you for showing interest in
-                <strong>${body.companyName}</strong>.
+                <strong>${esc(input.companyName)}</strong>.
                 Your enquiry has been successfully submitted and our team will review it shortly.
               </p>
 
-              <a href="https://wecos.online" style="background:#7c3aed;color:#ffffff;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:600;display:inline-block;margin-bottom:50px;">
+              <a href="${siteConfig.url}" style="background:#7c3aed;color:#ffffff;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:600;display:inline-block;margin-bottom:50px;">
                 Visit WeCos
               </a>
 
@@ -203,16 +206,74 @@ export async function POST(req: Request) {
                 Made by WeCos Technologies Pvt Ltd
               </p>
             </div>
-          `,
+          `;
+}
+
+export async function POST(req: Request) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+
+  if (rateLimited(ip)) {
+    return NextResponse.json(
+      { success: false, error: "Too many requests" },
+      { status: 429 },
+    );
+  }
+
+  const parsed = enquirySchema.safeParse(await req.json().catch(() => null));
+
+  if (!parsed.success) {
+    return NextResponse.json(
+      { success: false, error: "Invalid request" },
+      { status: 400 },
+    );
+  }
+
+  const data = parsed.data;
+  const doc =
+    data.type === "document"
+      ? enquiryDocuments.find((d) => d.label === data.documentName)
+      : undefined;
+
+  try {
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SMTP_EMAIL,
+        pass: process.env.SMTP_APP_PASSWORD,
+      },
+    });
+
+    await transporter.sendMail({
+      from: `"WeCos" <${process.env.SMTP_EMAIL}>`,
+      to: process.env.SMTP_EMAIL,
+      subject: doc ? `Document Requested: ${doc.label}` : "New Enquiry",
+      html: adminEmailHtml({
+        heading: doc ? "New Document Request" : "New Company Enquiry",
+        companyName: data.companyName,
+        userEmail: data.userEmail,
+        type: data.type,
+        documentName: doc?.label ?? "N/A",
+      }),
+    });
+
+    await transporter.sendMail({
+      from: `"WeCos" <${process.env.SMTP_EMAIL}>`,
+      to: data.userEmail,
+      subject: doc ? doc.subject : "We received your enquiry",
+      html: doc
+        ? documentEmailHtml({
+            doc,
+            companyName: data.companyName,
+            downloadUrl: `${siteConfig.url}${doc.path}`,
+          })
+        : enquiryEmailHtml({ companyName: data.companyName }),
     });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.log(error);
+    console.error("[company-enquiry] send failed", error);
 
-    return NextResponse.json(
-      { success: false },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false }, { status: 500 });
   }
 }

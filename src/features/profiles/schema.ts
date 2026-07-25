@@ -10,6 +10,12 @@ export const profileSchema = z.object({
   location: optionalText(80),
   bio: optionalText(500),
   avatarUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  /** Coffee Club city — a `cities` slug. Drives chapter matching. */
+  citySlug: optionalText(40),
+  /** Studio slugs the founder wants help with. The Studios lead signal. */
+  needs: z.array(z.string()).optional(),
+  /** Where the founder is in their journey. Shapes what we surface. */
+  stage: optionalText(40),
 });
 
 export type ProfileValues = z.infer<typeof profileSchema>;
