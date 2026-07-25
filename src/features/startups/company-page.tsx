@@ -119,7 +119,6 @@ function Card({ children, className }: { children: React.ReactNode; className?: 
 }
 
 export function CompanyPage({ data }: { data: CompanyPageData }) {
-  const [activeSection, setActiveSection] = useState("services");
   const [showEnquiryModal, setShowEnquiryModal] = useState(false);
   const [email, setEmail] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
@@ -181,16 +180,6 @@ useEffect(() => {
     setShowReadMore(el.scrollHeight > maxHeight);
   });
 }, [data.about]);
-
-const profileTabs = [
-  { id: "services", label: "Services" },
-  { id: "clients", label: "Clients" },
-  { id: "team", label: "Team" },
-  { id: "updates", label: "Recent Updates" },
-  { id: "roles", label: "Open Roles" },
-  { id: "highlights", label: "Highlights" },
-  { id: "operations", label: "Operations" },
-];
 
   const show = {
   overview: true,
@@ -358,24 +347,8 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
           )}
 
 <Card className="overflow-hidden">
-      <div className="flex items-center justify-center gap-4 overflow-x-auto border-b border-border px-4 sm:gap-6 sm:px-6 scrollbar-hide">
-        {profileTabs.map((tab) => (
-      <button
-        key={tab.id}
-        onClick={() => setActiveSection(tab.id)}
-        className={cn(
- "relative whitespace-nowrap px-3 py-5 text-sm font-semibold text-muted-foreground transition hover:text-primary",
-          activeSection === tab.id &&
-            "text-primary after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:bg-primary"
-        )}
-      >
-        {tab.label}
-      </button>
-    ))}
-  </div>
-
-  <div className="p-5 sm:p-6">
-    {activeSection === "services" && show.products && (
+  <div className="space-y-10 p-5 sm:p-6">
+    {show.products && (
       <div>
         <h2 className="text-lg font-bold">Our Services</h2>
 
@@ -418,7 +391,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
       </div>
     )}
 
-    {activeSection === "team" && show.people && (
+    {show.people && (
   <div>
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
@@ -555,7 +528,8 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
   </div>
 )}
 
-    {activeSection === "clients" && (
+    {/* Removed: hardcoded SpaceX client logos (placeholder). */}
+    {false && (
   <div>
     <h2 className="text-lg font-bold">Our Clients</h2>
 
@@ -659,7 +633,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
 </div>
   </div>
 )}
-    {activeSection === "updates" && show.updates && (
+    {show.updates && (
       <div>
         <h2 className="text-lg font-bold">Recent Updates</h2>
 
@@ -679,7 +653,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
       </div>
     )}
 
-    {activeSection === "roles" && show.jobs && (
+    {show.jobs && (
       <div>
         <h2 className="text-lg font-bold">Open Roles</h2>
 
@@ -706,7 +680,7 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
         </ul>
       </div>
     )}
-    {activeSection === "highlights" && show.stats && (
+    {show.stats && (
   <div>
     <h2 className="text-lg font-bold">Company Highlights</h2>
     <p className="mt-1 text-sm text-muted-foreground">
@@ -756,7 +730,8 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
     </div>
   </div>
 )}
-{activeSection === "operations" && (
+{/* Removed: hardcoded operating-centres block (placeholder). */}
+{false && (
   <div>
     <h2 className="text-lg font-bold">Operations</h2>
     <p className="mt-1 text-sm text-muted-foreground">
@@ -1131,21 +1106,22 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
 
   <Card className="p-5">
     <h3 className="text-lg font-bold">Contact {data.name}</h3>
+    <p className="mt-2 text-sm text-muted-foreground">
+      Send an enquiry and {data.name} will get back to you, usually within a
+      working day.
+    </p>
 
-    <div className="mt-5 space-y-4 text-sm">
-      <p><b>Contact Person</b><br />Business Team</p>
-      <p><b>Email</b><br />business@spacex.com</p>
-      <p><b>Phone</b><br />+1 (310) 363-6000</p>
-      <p><b>Office Address</b><br />1 Rocket Road, Hawthorne, CA 90250</p>
-    </div>
+    <StudioEnquiry studioName={data.name} label="Contact" className="mt-5 w-full" />
 
-    <button className="mt-6 w-full rounded-xl bg-primary py-3 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90">
+    <a
+      href="https://www.bookasloth.com"
+      target="_blank"
+      rel="noopener noreferrer"
+      className="mt-3 flex w-full items-center justify-center gap-2 rounded-[var(--radius-control)] border border-border py-2.5 text-sm font-semibold transition hover:bg-muted"
+    >
+      <CalendarDays className="size-4" />
       Book a Meeting
-    </button>
-
-    <button className="mt-3 w-full rounded-xl border py-3 text-sm font-semibold">
-      Contact Us
-    </button>
+    </a>
   </Card>
   <Card className="rounded-2xl border border-border bg-card p-4 shadow-sm">
   <h3 className="mb-4 text-base font-bold">
