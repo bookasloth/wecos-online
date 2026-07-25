@@ -17,7 +17,7 @@
 
   --font-sans: var(--font-sans);
   --font-mono: var(--font-mono);
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-heading);
 
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -91,8 +91,9 @@
 
 :root {
   --radius: 0.625rem;
-  --font-sans: "Open Sauce Sans", ui-sans-serif, system-ui, -apple-system,
+  --font-sans: var(--font-poppins), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
+  --font-heading: var(--font-lora), Georgia, "Times New Roman", serif;
 
   /* Surfaces — warm cream / white */
   --background: #fbfaf8;
@@ -221,8 +222,11 @@
     @apply bg-background text-foreground;
     text-rendering: optimizeLegibility;
   }
-  h1, h2, h3, h4, h5, h6 {
+  h1, h2 {
     @apply font-heading tracking-tight;
+  }
+  h3, h4, h5, h6 {
+    @apply tracking-tight;
   }
   button:not(:disabled), [role="button"]:not(:disabled) {
     cursor: pointer;
