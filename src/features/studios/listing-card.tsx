@@ -19,7 +19,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
   const isWecos = listing.kind === "wecos";
 
   return (
-    <li className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary hover:shadow-md">
+    <li className="group relative flex h-[21rem] flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary hover:shadow-md">
       <Link
         href={`/startup/${listing.slug}`}
         className="absolute inset-0 z-0"
@@ -65,8 +65,10 @@ export function ListingCard({ listing }: { listing: Listing }) {
         </div>
       </div>
 
-      {/* Description */}
-      <p className="relative z-10 mt-5 line-clamp-2 text-sm leading-6 text-muted-foreground">
+      {/* Description — flexes to fill the card. It shows more lines at rest and
+          gives up lines (with a soft fade) when the footer reveals on hover, so
+          the card height never changes. */}
+      <p className="relative z-10 mt-4 min-h-0 flex-1 overflow-hidden text-sm leading-6 text-muted-foreground [mask-image:linear-gradient(to_bottom,black_75%,transparent)]">
         {listing.pitch}
       </p>
 
@@ -88,26 +90,26 @@ export function ListingCard({ listing }: { listing: Listing }) {
         </span>
       </div>
 
-      {/* Price + Enquire. The slot always reserves its height (so the card
-          never resizes and the grid stays aligned); the content is invisible
-          and nudged down until hover, then fades and slides up in place.
-          pointer-events are off while hidden so clicks reach the card link.
-          Always shown on touch devices (no hover). */}
-      <div className="relative z-10 mt-4 flex translate-y-1 items-center justify-between gap-3 border-t border-border pt-4 opacity-0 transition-all duration-300 ease-out pointer-events-none group-hover:translate-y-0 group-hover:opacity-100 group-hover:pointer-events-auto [@media(hover:none)]:translate-y-0 [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto">
-        <p className="text-sm text-muted-foreground">
-          {from ? (
-            <>
-              From <span className="font-semibold text-foreground">{formatInr(from)}</span>
-            </>
-          ) : (
-            "On request"
-          )}
-        </p>
-        <StudioEnquiry
-          studioName={listing.name}
-          label="Enquire now"
-          className="h-9 px-5 text-sm font-bold"
-        />
+      {/* Price + Enquire — revealed on hover. The card height is fixed and the
+          bio above flexes, so this footer's growth is absorbed by the bio
+          shrinking, not by the card resizing. Always shown on touch devices. */}
+      <div className="relative z-10 max-h-0 overflow-hidden opacity-0 transition-all duration-300 ease-out pointer-events-none group-hover:mt-4 group-hover:max-h-24 group-hover:opacity-100 group-hover:pointer-events-auto [@media(hover:none)]:mt-4 [@media(hover:none)]:max-h-24 [@media(hover:none)]:opacity-100 [@media(hover:none)]:pointer-events-auto">
+        <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
+          <p className="text-sm text-muted-foreground">
+            {from ? (
+              <>
+                From <span className="font-semibold text-foreground">{formatInr(from)}</span>
+              </>
+            ) : (
+              "On request"
+            )}
+          </p>
+          <StudioEnquiry
+            studioName={listing.name}
+            label="Enquire now"
+            className="h-9 px-5 text-sm font-bold"
+          />
+        </div>
       </div>
     </li>
   );
