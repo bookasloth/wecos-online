@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { enquiryDocuments, siteConfig } from "@/config/site";
-import { sendEmail } from "@/lib/email";
+import { sendEmail, renderEmail, emailTokens } from "@/lib/email";
 
 /**
  * Escapes a value before it is interpolated into email HTML.
@@ -88,37 +88,24 @@ function adminEmailHtml(input: {
 }) {
   const row = (label: string, value?: string) =>
     value && value.trim()
-      ? `<tr><td style="padding:6px 0;vertical-align:top"><b>${label}</b></td><td style="padding:6px 0">${esc(value)}</td></tr>`
+      ? `<tr><td style="padding:7px 0;vertical-align:top;font-family:${emailTokens.sans};font-size:14px;font-weight:600;color:${emailTokens.ink};width:160px;">${label}</td><td style="padding:7px 0;font-family:${emailTokens.sans};font-size:14px;line-height:1.6;color:${emailTokens.body};">${esc(value)}</td></tr>`
       : "";
-
-  return `
-        <div style="font-family:Arial,sans-serif;max-width:700px;margin:auto;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden">
-          <div style="background:linear-gradient(135deg,#7c3aed,#8b5cf6);padding:25px;color:white">
-            <h1 style="margin:0">
-              ${input.heading}
-            </h1>
-            <p>A new request has been submitted through WeCos.</p>
-          </div>
-
-          <div style="padding:30px">
-            <table style="width:100%">
-              ${row("Enquiring about", input.companyName)}
-              ${row("Name", input.name)}
-              ${row("User Email", input.userEmail)}
-              ${row("Phone / WhatsApp", input.phone)}
-              ${row("What they need", input.message)}
-              ${row("Budget", input.budget)}
-              ${row("Timeline", input.timeline)}
-              ${row("Type", input.type)}
-              ${input.documentName !== "N/A" ? row("Document", input.documentName) : ""}
-              <tr>
-                <td style="padding:6px 0"><b>Date</b></td>
-                <td style="padding:6px 0">${new Date().toLocaleString()}</td>
-              </tr>
-            </table>
-          </div>
-        </div>
-      `;
+  return renderEmail({
+    category: "account",
+    preheader: `${input.heading} — ${input.companyName}`,
+    headline: input.heading,
+    intro: "A new request just came in through WeCos.",
+    bodyHtml: `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid ${emailTokens.line};border-radius:12px;padding:6px 18px;">
+      ${row("Enquiring about", input.companyName)}
+      ${row("Name", input.name)}
+      ${row("Email", input.userEmail)}
+      ${row("Phone / WhatsApp", input.phone)}
+      ${row("What they need", input.message)}
+      ${row("Budget", input.budget)}
+      ${row("Timeline", input.timeline)}
+      ${input.documentName !== "N/A" ? row("Document", input.documentName) : ""}
+    </table>`,
+  });
 }
 
 function documentEmailHtml(input: {
@@ -126,95 +113,24 @@ function documentEmailHtml(input: {
   companyName: string;
   downloadUrl: string;
 }) {
-  return `
-            <div style="max-width:600px;margin:0 auto;padding:40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#ffffff;">
-              <div style="margin-bottom:30px">
-                <img src="${siteConfig.url}/logo.png" width="40" alt="WeCos" />
-              </div>
-
-              <h1 style="font-size:40px;font-weight:700;color:#1f2937;margin:0 0 25px 0;">
-                ${input.doc.title}
-              </h1>
-
-              <p style="font-size:20px;line-height:1.7;color:#374151;margin-bottom:20px;">
-                We hope you're having a wonderful day.
-              </p>
-
-              <p style="font-size:20px;line-height:1.7;color:#374151;margin-bottom:20px;">
-                ${input.doc.description}
-              </p>
-
-              <div style="background:#f8fafc;padding:20px;border-radius:10px;margin:30px 0;">
-                <p><b>Company:</b> ${esc(input.companyName)}</p>
-                <p><b>Document:</b> ${input.doc.label}</p>
-                <p><b>Requested:</b> ${new Date().toLocaleString()}</p>
-              </div>
-
-              <a href="${input.downloadUrl}" style="background:#7c3aed;color:#ffffff;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:600;display:inline-block;margin-bottom:50px;">
-                ${input.doc.button}
-              </a>
-
-              <p style="font-size:20px;color:#374151;margin-top:20px;">
-                Thanks for your interest!
-              </p>
-
-              <p style="font-size:20px;color:#374151;">Cheers,</p>
-
-              <p style="font-size:20px;color:#374151;font-weight:600;">
-                The WeCos Team
-              </p>
-
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:50px 0 30px 0;">
-
-              <p style="text-align:center;color:#9ca3af;font-size:14px;">
-                Made by WeCos Technologies Pvt Ltd
-              </p>
-            </div>
-          `;
+  return renderEmail({
+    category: "transactional",
+    preheader: input.doc.description,
+    headline: input.doc.title,
+    intro: input.doc.description,
+    cta: { label: input.doc.button, href: input.downloadUrl },
+    bodyHtml: `<p style="margin:0;font-family:${emailTokens.sans};font-size:13px;color:${emailTokens.faint};">Requested by ${esc(input.companyName)} &middot; ${esc(input.doc.label)}</p>`,
+  });
 }
 
 function enquiryEmailHtml(input: { companyName: string }) {
-  return `
-            <div style="max-width:600px;margin:0 auto;padding:40px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#ffffff;">
-              <div style="margin-bottom:30px">
-                <img src="${siteConfig.url}/logo.png" width="40" alt="WeCos" />
-              </div>
-
-              <h1 style="font-size:40px;font-weight:700;color:#1f2937;margin:0 0 25px 0;">
-                Thank you for your enquiry!
-              </h1>
-
-              <p style="font-size:20px;line-height:1.7;color:#374151;margin-bottom:20px;">
-                We hope you're having a wonderful day.
-              </p>
-
-              <p style="font-size:20px;line-height:1.7;color:#374151;margin-bottom:20px;">
-                Thank you for showing interest in
-                <strong>${esc(input.companyName)}</strong>.
-                Your enquiry has been successfully submitted and our team will review it shortly.
-              </p>
-
-              <a href="${siteConfig.url}" style="background:#7c3aed;color:#ffffff;padding:16px 32px;border-radius:6px;text-decoration:none;font-size:18px;font-weight:600;display:inline-block;margin-bottom:50px;">
-                Visit WeCos
-              </a>
-
-              <p style="font-size:20px;color:#374151;margin-top:20px;">
-                Thanks for your interest!
-              </p>
-
-              <p style="font-size:20px;color:#374151;">Cheers,</p>
-
-              <p style="font-size:20px;color:#374151;font-weight:600;">
-                The WeCos Team
-              </p>
-
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:50px 0 30px 0;">
-
-              <p style="text-align:center;color:#9ca3af;font-size:14px;">
-                Made by WeCos Technologies Pvt Ltd
-              </p>
-            </div>
-          `;
+  return renderEmail({
+    category: "transactional",
+    preheader: "We received your enquiry.",
+    headline: "Thanks for your enquiry.",
+    intro: `Thanks for showing interest in <strong>${esc(input.companyName)}</strong>. Your enquiry is in — our team will review it and get back to you shortly.`,
+    cta: { label: "Visit WeCos", href: siteConfig.url },
+  });
 }
 
 export async function POST(req: Request) {
