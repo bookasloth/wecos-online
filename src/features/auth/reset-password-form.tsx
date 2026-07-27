@@ -23,8 +23,16 @@ export function ResetPasswordForm() {
     defaultValues: { password: "", confirm: "" },
   });
 
-  const onSubmit = () => {
-    // Mock — the real update runs against Supabase Auth in the backend phase.
+  const onSubmit = async (values: ResetPasswordValues) => {
+    const { createClient } = await import("@/lib/supabase/client");
+    const supabase = createClient();
+    // The user arrives via the emailed recovery link, which the browser client
+    // turns into a session — so updateUser can set the new password.
+    const { error } = await supabase.auth.updateUser({ password: values.password });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success("Password updated. You can sign in now.");
     router.push("/sign-in");
   };

@@ -92,7 +92,15 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem
-                  onClick={() => {
+                  onClick={async () => {
+                    try {
+                      if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+                        const { createClient } = await import("@/lib/supabase/client");
+                        await createClient().auth.signOut();
+                      }
+                    } catch {
+                      /* ignore — still clear local session below */
+                    }
                     signOut();
                     router.push("/");
                   }}
