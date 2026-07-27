@@ -8,6 +8,11 @@
 -- ============================================================
 -- 0 · Extensions + shared helpers
 -- ============================================================
+-- Skip function-body validation during this migration: is_staff() references
+-- public.profiles before that table is created a few lines down. (plpgsql
+-- bodies defer anyway; this covers the language-sql helpers.)
+set check_function_bodies = off;
+
 create extension if not exists "pgcrypto";
 create extension if not exists "citext";
 
