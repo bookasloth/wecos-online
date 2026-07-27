@@ -298,8 +298,8 @@ create policy "leads select staff/unlocked" on public.leads for select using (
   public.is_staff()
   or exists (
     select 1 from public.lead_unlocks u
-    join public.startups s on s.id = u.provider_startup_id
-    where u.lead_id = leads.id and s.owner_id = auth.uid()
+    where u.lead_id = leads.id
+      and u.provider_startup_id in (select id from public.startups where owner_id = auth.uid())
   )
 );
 create policy "leads update staff" on public.leads for update using (public.is_staff());
@@ -311,8 +311,8 @@ create view public.lead_previews with (security_invoker = off) as
     l.created_at,
     exists (
       select 1 from public.lead_unlocks u
-      join public.startups s on s.id = u.provider_startup_id
-      where u.lead_id = l.id and s.owner_id = auth.uid()
+      where u.lead_id = l.id
+        and u.provider_startup_id in (select id from public.startups where owner_id = auth.uid())
     ) as unlocked_by_me
   from public.leads l
   where l.status <> 'spam'
