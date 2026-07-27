@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import nodemailer from "nodemailer";
 import { z } from "zod";
 import { enquiryDocuments, siteConfig } from "@/config/site";
+import { sendEmail } from "@/lib/email";
 
 /**
  * Escapes a value before it is interpolated into email HTML.
@@ -245,34 +245,30 @@ export async function POST(req: Request) {
   const enq = data.type === "enquiry" ? data : undefined;
 
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.SMTP_EMAIL,
-        pass: process.env.SMTP_APP_PASSWORD,
-      },
-    });
+    // Admin notification (reply goes straight to the enquirer).
+    const adminTo = process.env.ADMIN_EMAIL ?? process.env.RESEND_FROM_EMAIL;
+    if (adminTo) {
+      await sendEmail({
+        to: adminTo,
+        replyTo: data.userEmail,
+        subject: doc ? `Document Requested: ${doc.label}` : "New Enquiry",
+        html: adminEmailHtml({
+          heading: doc ? "New Document Request" : "New Company Enquiry",
+          companyName: data.companyName,
+          userEmail: data.userEmail,
+          type: data.type,
+          documentName: doc?.label ?? "N/A",
+          name: enq?.name,
+          phone: enq?.phone,
+          message: enq?.message,
+          budget: enq?.budget,
+          timeline: enq?.timeline,
+        }),
+      });
+    }
 
-    await transporter.sendMail({
-      from: `"WeCos" <${process.env.SMTP_EMAIL}>`,
-      to: process.env.SMTP_EMAIL,
-      subject: doc ? `Document Requested: ${doc.label}` : "New Enquiry",
-      html: adminEmailHtml({
-        heading: doc ? "New Document Request" : "New Company Enquiry",
-        companyName: data.companyName,
-        userEmail: data.userEmail,
-        type: data.type,
-        documentName: doc?.label ?? "N/A",
-        name: enq?.name,
-        phone: enq?.phone,
-        message: enq?.message,
-        budget: enq?.budget,
-        timeline: enq?.timeline,
-      }),
-    });
-
-    await transporter.sendMail({
-      from: `"WeCos" <${process.env.SMTP_EMAIL}>`,
+    // Confirmation to the enquirer.
+    await sendEmail({
       to: data.userEmail,
       subject: doc ? doc.subject : "We received your enquiry",
       html: doc

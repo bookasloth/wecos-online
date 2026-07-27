@@ -7,20 +7,20 @@ in the request.
 **Status:** `live` = actually sends · `mock` = UI fires it but no real send yet
 (toast placeholder) · `planned` = agreed, not built.
 
-> Most of the app is localStorage-only, but the enquiry endpoint
-> (`/api/company-enquiry`, nodemailer/Gmail) **does send real email today** —
-> both an admin notification and a confirmation to the enquirer. Auth emails are
-> still mock/planned until Supabase Auth lands.
+> Transactional email is sent via **Resend** (`src/lib/email.ts`) —
+> enquiry/document/welcome. **Auth emails** (confirmation, password reset) are
+> sent by **Supabase Auth**; point Supabase's SMTP at Resend in the dashboard to
+> unify the sender.
 
 ## Members
 
 | # | Topic | Trigger | Status |
 |---|-------|---------|--------|
-| 1 | Enquiry confirmation | Sends a studio/startup enquiry (`/api/company-enquiry`) | live |
-| 2 | Document delivery (with download link) | Requests a gated document | live |
-| 3 | Password reset link | Submits the forgot-password form | mock |
-| 4 | Password changed confirmation | Completes reset-password (security notice) | planned |
-| 5 | Welcome / account created | Signs up | planned |
+| 1 | Enquiry confirmation | Sends a studio/startup enquiry (`/api/company-enquiry`, Resend) | live |
+| 2 | Document delivery (with download link) | Requests a gated document (Resend) | live |
+| 3 | Welcome | Completes onboarding (`/api/welcome`, Resend) | live |
+| 4 | Password reset link | Submits forgot-password (Supabase Auth) | live |
+| 5 | Email confirmation | Signs up (Supabase Auth, if confirm-email on) | live |
 
 ## Admin
 
@@ -38,6 +38,6 @@ in the request.
 
 ## Totals
 
-- Members: 5 (2 live, 1 mock, 2 planned)
+- Members: 5 (5 live)
 - Admin: 3 (2 live, 1 planned)
 - Support: 0
