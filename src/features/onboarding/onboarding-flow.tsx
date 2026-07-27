@@ -166,6 +166,16 @@ function Flow() {
     }
     completeOnboarding();
     setStep(DONE);
+
+    // Fire-and-forget welcome email (Resend). Never blocks finishing.
+    const email = profile?.email;
+    if (email) {
+      fetch("/api/welcome", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, name: fullName.trim() }),
+      }).catch(() => {});
+    }
   };
 
   return (
