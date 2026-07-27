@@ -7,6 +7,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { signInSchema, type SignInValues } from "@/features/auth/schema";
 import { useAppStore } from "@/lib/store/app-store";
+import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/form/password-input";
@@ -25,10 +26,20 @@ export function SignInForm() {
     defaultValues: { email: "", password: "" },
   });
 
-  const onSubmit = (values: SignInValues) => {
+  const onSubmit = async (values: SignInValues) => {
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInWithPassword({
+      email: values.email,
+      password: values.password,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     signIn({ email: values.email });
     toast.success("Welcome back");
     router.push("/dashboard");
+    router.refresh();
   };
 
   return (

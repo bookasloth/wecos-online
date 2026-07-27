@@ -6,6 +6,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { signUpSchema, type SignUpValues } from "@/features/auth/schema";
 import { useAppStore } from "@/lib/store/app-store";
+import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/form/password-input";
@@ -24,10 +25,27 @@ export function SignUpForm() {
     defaultValues: { fullName: "", email: "", password: "" },
   });
 
-  const onSubmit = (values: SignUpValues) => {
+  const onSubmit = async (values: SignUpValues) => {
+    const supabase = createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
+      options: { data: { full_name: values.fullName } },
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    // Mirror into the store so the current UI works; the DB profile row is
+    // created by the handle_new_user trigger.
     signUp({ fullName: values.fullName, email: values.email });
-    toast.success("Account created");
-    router.push("/onboarding");
+    if (data.session) {
+      toast.success("Account created");
+      router.push("/onboarding");
+    } else {
+      // Email-confirmation is on — no session yet.
+      toast.success("Check your email to confirm your account, then sign in.");
+    }
   };
 
   return (

@@ -22,8 +22,16 @@ export function ForgotPasswordForm() {
     defaultValues: { email: "" },
   });
 
-  const onSubmit = (values: ForgotPasswordValues) => {
-    // Mock — real reset email is sent by Supabase Auth in the backend phase.
+  const onSubmit = async (values: ForgotPasswordValues) => {
+    const { createClient } = await import("@/lib/supabase/client");
+    const supabase = createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(values.email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
     toast.success(`If an account exists for ${values.email}, a reset link is on its way.`);
     reset();
   };

@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/providers/theme-provider";
+import { AuthSync } from "@/features/auth/auth-sync";
 
 /**
  * Composition root for all client-side providers.
@@ -17,6 +18,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       enableSystem
       disableTransitionOnChange
     >
+      <AuthSync />
       {children}
       <Toaster richColors position="top-center" />
     </ThemeProvider>
