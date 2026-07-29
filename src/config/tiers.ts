@@ -94,7 +94,7 @@ const CAPABILITY_MIN_TIER: Record<TierCapability, TierId> = {
   "profile.viewers": "network",
 
   "connection.send": "free", // free is capped at 5/mo — a numeric limit, not a capability
-  "message.send": "free", // free can message connections only — scope, not capability
+  "message.send": "network", // paid feature: free members can't DM paid members (see <MessageButton>)
   "follow": "free",
 
   "post.create": "free",

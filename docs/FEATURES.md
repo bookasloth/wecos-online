@@ -42,7 +42,7 @@ studio; alternatives considered: Inner Circle, Chapter, Catalyst.
 | Follow founders | ✓ | ✓ | ✓ | ✓ | ❌ |
 | Accept connection requests | ✓ | ✓ | ✓ | ✓ | ❌ |
 | **Send** connection requests | 5/month | Unlimited | Unlimited | Unlimited | ❌ |
-| Direct messages | To connections | ✓ | ✓ | ✓ | ❌ |
+| Direct messages | — | ✓ | ✓ | ✓ | 🟡 gated (`message.send`) — free can't DM paid members |
 | Who viewed your profile | — | ✓ | ✓ | ✓ | ❌ |
 
 The free allowance of 5/month is deliberate: if free users cannot initiate, the

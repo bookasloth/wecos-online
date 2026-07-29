@@ -66,7 +66,7 @@ test("admin capabilities are never tier-granted (staff-only)", () => {
 test("paid features are closed to free — the money gates", () => {
   const paidOnly: Capability[] = [
     "venture.list", "lead.view", "lead.unlock", "provider.list",
-    "studio.discount", "event.create", "founderCall.request",
+    "studio.discount", "event.create", "founderCall.request", "message.send",
   ];
   for (const cap of paidOnly) {
     assert.equal(tierAllows("free", cap), false, `${cap} is open to free!`);
