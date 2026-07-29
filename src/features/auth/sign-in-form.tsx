@@ -17,6 +17,7 @@ import { SocialAuth } from "@/features/auth/social-auth";
 export function SignInForm() {
   const router = useRouter();
   const signIn = useAppStore((s) => s.signIn);
+  const hydrateFromRemote = useAppStore((s) => s.hydrateFromRemote);
   const {
     register,
     handleSubmit,
@@ -28,7 +29,7 @@ export function SignInForm() {
 
   const onSubmit = async (values: SignInValues) => {
     const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email: values.email,
       password: values.password,
     });
@@ -38,7 +39,55 @@ export function SignInForm() {
     }
     signIn({ email: values.email });
     toast.success("Welcome back");
-    router.push("/dashboard");
+
+    // Rehydrate from Supabase so a returning user (fresh browser / expired
+    // session) isn't wrongly bounced back through onboarding. If they have a
+    // profile row, restore it and go to the dashboard; otherwise onboard.
+    const userId = data.user?.id;
+    let destination = "/dashboard";
+    if (userId) {
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("id,handle,full_name,headline,bio,avatar_url,location")
+        .eq("id", userId)
+        .maybeSingle();
+
+      if (prof?.handle) {
+        const { data: st } = await supabase
+          .from("startups")
+          .select("id,slug,name,about,logo_url,website,city,topics")
+          .eq("owner_id", userId)
+          .maybeSingle();
+
+        hydrateFromRemote({
+          profile: {
+            id: prof.id,
+            email: values.email,
+            handle: prof.handle,
+            fullName: prof.full_name ?? "",
+            headline: prof.headline ?? "",
+            location: prof.location ?? "",
+            bio: prof.bio ?? "",
+            avatarUrl: prof.avatar_url ?? "",
+          },
+          startup: st
+            ? {
+                id: st.id,
+                slug: st.slug,
+                name: st.name,
+                description: st.about ?? "",
+                logoUrl: st.logo_url ?? "",
+                website: st.website ?? "",
+                location: st.city ?? "",
+              }
+            : null,
+        });
+      } else {
+        destination = "/onboarding";
+      }
+    }
+
+    router.push(destination);
     router.refresh();
   };
 

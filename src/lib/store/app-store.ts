@@ -96,6 +96,16 @@ type AppState = {
 
   signUp: (input: { fullName: string; email: string }) => void;
   signIn: (input: { email: string }) => void;
+  /**
+   * Rehydrate a returning user from their Supabase rows on sign-in. `onboarded`
+   * lives only in local storage, so without this a returning user on a fresh
+   * browser is wrongly sent back through onboarding. Marks them onboarded and
+   * restores profile/startup from the server.
+   */
+  hydrateFromRemote: (input: {
+    profile: Profile;
+    startup: Startup | null;
+  }) => void;
   signOut: () => void;
   saveProfile: (values: ProfileValues) => void;
   /** Claim a vanity handle. Caller must validate with `isValidHandle` first. */
@@ -265,6 +275,16 @@ export const useAppStore = create<AppState>()(
           });
         }
       },
+
+      hydrateFromRemote: ({ profile, startup }) =>
+        set((state) => ({
+          profile,
+          startup: startup ?? state.startup,
+          onboarded: true,
+          session: state.session
+            ? { ...state.session, fullName: profile.fullName }
+            : { email: profile.email, fullName: profile.fullName },
+        })),
 
       signOut: () => set({ session: null }),
 
