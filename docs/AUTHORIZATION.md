@@ -3,7 +3,13 @@
 What a signed-in user is allowed to do. This is the layer every feature checks
 against, so it should exist before the features do.
 
-**Status:** ✅ Designed, not implemented · **Last updated:** 2026-07-24
+**Status:** ✅ Implemented (mock tier) · **Last updated:** 2026-07-29
+
+Code: `src/config/tiers.ts` (capability→tier matrix + limits), `src/lib/authz/can.ts`
+(`can()`), `src/lib/authz/use-can.ts` (`useCan()`), `src/components/authz/upgrade.tsx`
+(`<Upgrade>`). Tier is read from the mock store's `membership.tier` (null = free).
+Matrix guarded by `src/config/tiers.test.ts` (`node --test`). Still TODO: staff
+role for `admin.*`, usage/credit counters, and RLS — none exist in the mock yet.
 
 Authentication (*who you are*) is [AUTHENTICATION.md](AUTHENTICATION.md). This
 document is *what you may do*.

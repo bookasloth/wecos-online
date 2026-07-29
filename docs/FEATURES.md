@@ -54,13 +54,14 @@ graph never grows and paying members have nobody to connect with.
 |---|:--:|:--:|:--:|:--:|:--:|
 | Read, comment, vote | ✓ | ✓ | ✓ | ✓ | ✅ |
 | Post — text, question, win | ✓ | ✓ | ✓ | ✓ | ✅ |
-| Post — poll, quiz, video, milestone | — | ✓ | ✓ | ✓ | ✅ ungated |
+| Post — poll, quiz, video, milestone | — | ✓ | ✓ | ✓ | ✅ gated (`post.richKinds`) |
 | Join circles / city chapters | ✓ | ✓ | ✓ | ✓ | ❌ |
 | Create a circle | — | — | — | ✓ | ❌ |
 | Notifications | ✓ | ✓ | ✓ | ✓ | ❌ |
 
-⚠️ The feed's "Following" tab currently filters `author.handle !== myHandle` —
-i.e. *everyone except me*. There is no follow concept. See [KNOWN_ISSUES.md](KNOWN_ISSUES.md).
+The feed's misleading "Following" tab was removed (it showed *everyone except
+me* — there is no follow concept yet). It returns when the follow-graph lands
+under "Connections and follows". Feed now shows "For you" and "Bookmarks".
 
 ## Ventures (business profile)
 

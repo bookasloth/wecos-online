@@ -19,10 +19,10 @@ function List({ posts }: { posts: FeedPost[] }) {
 
 export function FeedView() {
   const posts = useAppStore((s) => s.posts);
-  const profile = useAppStore((s) => s.profile);
-  const myHandle = profile?.handle;
 
-  const following = posts.filter((p) => p.author.handle !== myHandle);
+  // ponytail: no "Following" tab until a real follow-graph exists (see ROADMAP
+  // "Connections and follows"). A tab that shows everyone-but-you is a broken
+  // promise; drop it rather than fake it.
   const bookmarks = posts.filter((p) => p.bookmarked);
 
   return (
@@ -32,11 +32,9 @@ export function FeedView() {
       <Tabs defaultValue="foryou" className="gap-4">
         <TabsList>
           <TabsTrigger value="foryou">For you</TabsTrigger>
-          <TabsTrigger value="following">Following</TabsTrigger>
           <TabsTrigger value="bookmarks">Bookmarks</TabsTrigger>
         </TabsList>
         <TabsContent value="foryou"><List posts={posts} /></TabsContent>
-        <TabsContent value="following"><List posts={following} /></TabsContent>
         <TabsContent value="bookmarks"><List posts={bookmarks} /></TabsContent>
       </Tabs>
     </div>
