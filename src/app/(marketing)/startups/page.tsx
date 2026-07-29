@@ -6,10 +6,11 @@
  * company page. Becomes a DB query (with real votes) when the backend is wired.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   BadgeCheck,
+  Loader2,
   Search,
   Crown,
   RotateCcw,
@@ -19,7 +20,26 @@ import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Container } from "@/components/layout/container";
 import { Modal } from "@/components/ui/modal";
-import { startups } from "@/lib/sample/sample-data";
+import { createClient } from "@/lib/supabase/client";
+
+/**
+ * A startup as the directory renders it. Mapped from the Supabase `startups`
+ * row. Only rows with `listed = true` are fetched — that flag is the public
+ * expression of the owner's `venture.list` entitlement (Venture+), so free/
+ * network members' pages never appear here. See docs/AUTHORIZATION.md.
+ */
+type DirectoryStartup = {
+  slug: string;
+  name: string;
+  tagline: string;
+  industry: string;
+  topics: string[];
+  logoUrl: string | null;
+  upvotes: number;
+  commentsCount: number;
+  verified: boolean;
+  overview: { founded: string };
+};
 
 const SORTS = ["Trending", "Newest", "Most discussed", "Featured"] as const;
 type Sort = (typeof SORTS)[number];
@@ -37,6 +57,46 @@ const CATEGORY_CARDS = [
 ];
 
 export default function StartupsDirectoryPage() {
+  const [rows, setRows] = useState<DirectoryStartup[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      const { data, error } = await createClient()
+        .from("startups")
+        .select(
+          "slug,name,tagline,about,logo_url,topics,founded_year,verified,likes_count",
+        )
+        .eq("listed", true)
+        .order("created_at", { ascending: false });
+      if (!active) return;
+      if (error) {
+        console.error("[startups] fetch failed", error.message);
+        setRows([]);
+      } else {
+        setRows(
+          (data ?? []).map((s) => ({
+            slug: s.slug,
+            name: s.name,
+            tagline: s.tagline ?? s.about ?? "",
+            topics: s.topics ?? [],
+            industry: s.topics?.[0] ?? "",
+            logoUrl: s.logo_url,
+            upvotes: s.likes_count ?? 0,
+            commentsCount: 0,
+            verified: !!s.verified,
+            overview: { founded: s.founded_year ? String(s.founded_year) : "" },
+          })),
+        );
+      }
+      setLoading(false);
+    })();
+    return () => {
+      active = false;
+    };
+  }, []);
+
   const [query, setQuery] = useState("");
 const categories = ["All", ...CATEGORY_CARDS];
 const [selectedCategories, setSelectedCategories] = useState<string[]>(categories);  const [sort, setSort] = useState<Sort>("Trending");
@@ -72,7 +132,7 @@ const toggleCategory = (c: string) => {
 
   const list = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const filtered = startups.filter((s) => {
+    const filtered = rows.filter((s) => {
       const inCat =
   selectedCategories.includes("All") ||
   selectedCategories.length === 0 ||
@@ -92,7 +152,7 @@ const toggleCategory = (c: string) => {
       if (sort === "Most discussed") return (b.commentsCount ?? 0) - (a.commentsCount ?? 0);
       return (b.upvotes ?? 0) - (a.upvotes ?? 0);
     });
-}, [query, selectedCategories, sort]);
+}, [rows, query, selectedCategories, sort]);
 
     const resetFilters = () => {
   setQuery("");
@@ -251,9 +311,15 @@ return (
 
       {/* RIGHT STARTUP LIST */}
       <main>
-        {list.length === 0 ? (
+        {loading ? (
+          <div className="grid place-items-center rounded-2xl border border-dashed border-border p-16">
+            <Loader2 className="size-6 animate-spin text-muted-foreground" />
+          </div>
+        ) : list.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-border p-12 text-center text-muted-foreground">
-            No startups match your search.
+            {rows.length === 0
+              ? "No startups are listed yet. Founders on the Venture plan appear here."
+              : "No startups match your search."}
           </div>
         ) : (
           <ul className="grid gap-5 sm:gap-6 xl:grid-cols-2">
@@ -281,12 +347,17 @@ return (
 {/* TOP ROW */}
 <div className="relative z-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
 <div className="flex min-w-0 items-start gap-3 sm:gap-4">    
-    <div className="-mt-4 size-20 shrink-0 overflow-hidden rounded-full border border-border bg-muted shadow-sm">
-      <img
-        src={s.logoUrl}
-        alt={`${s.name} logo`}
-        className="h-full w-full object-cover"
-      />
+    <div className="-mt-4 grid size-20 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-muted text-2xl font-bold text-muted-foreground shadow-sm">
+      {s.logoUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={s.logoUrl}
+          alt={`${s.name} logo`}
+          className="h-full w-full object-cover"
+        />
+      ) : (
+        s.name.charAt(0).toUpperCase()
+      )}
     </div>
 
     <div className="min-w-0">

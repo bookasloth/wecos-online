@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import { Building2, ExternalLink, Pencil, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -8,11 +9,29 @@ import { DashboardHeader } from "@/components/app/dashboard-header";
 import { StartupDisplay } from "@/features/startups/startup-display";
 import { Upgrade } from "@/components/authz/upgrade";
 import { useCan } from "@/lib/authz/use-can";
+import { createClient } from "@/lib/supabase/client";
 import { useAppStore } from "@/lib/store/app-store";
 
 export default function StartupViewPage() {
   const startup = useAppStore((s) => s.startup);
   const canList = useCan("venture.list");
+
+  // Sync the venture.list entitlement to the DB `listed` flag so the public
+  // /startups directory shows a Venture+ member's page. One-way on purpose:
+  // ponytail: we list on upgrade but don't auto-unlist on downgrade here —
+  // downgrade-unlisting is an explicit action to add with the membership backend.
+  useEffect(() => {
+    if (!canList || !startup) return;
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) return;
+    (async () => {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) return;
+      await supabase.from("startups").update({ listed: true }).eq("owner_id", user.id);
+    })();
+  }, [canList, startup]);
 
   if (!startup) {
     return (
