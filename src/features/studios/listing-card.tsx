@@ -3,6 +3,8 @@
 import Link from "next/link";
 import { BadgeCheck, Crown, MapPin, Star } from "lucide-react";
 import { cn, formatInr } from "@/lib/utils";
+import { studioDiscountPct } from "@/config/site";
+import { useCan, useAuthzUser } from "@/lib/authz/use-can";
 import { accent, categoryBySlug, fromPrice, type Listing } from "./catalog";
 import { StudioEnquiry } from "./studio-enquiry";
 
@@ -17,6 +19,13 @@ export function ListingCard({ listing }: { listing: Listing }) {
   const Icon = cat?.icon;
   const from = fromPrice(listing);
   const isWecos = listing.kind === "wecos";
+
+  // Member discount applies to WeCos studio packages only (see docs/FEATURES.md).
+  const { tier } = useAuthzUser();
+  const canDiscount = useCan("studio.discount");
+  const discountPct = studioDiscountPct[tier];
+  const showDiscount = isWecos && canDiscount && from != null && discountPct > 0;
+  const memberPrice = showDiscount ? Math.round(from! * (1 - discountPct / 100)) : null;
 
   return (
     <li className="group relative flex h-[21rem] flex-col overflow-hidden rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:border-primary hover:shadow-md">
@@ -97,9 +106,18 @@ export function ListingCard({ listing }: { listing: Listing }) {
         <div className="flex items-center justify-between gap-3 border-t border-border pt-4">
           <p className="text-sm text-muted-foreground">
             {from ? (
-              <>
-                From <span className="font-semibold text-foreground">{formatInr(from)}</span>
-              </>
+              showDiscount ? (
+                <>
+                  From{" "}
+                  <span className="text-muted-foreground line-through">{formatInr(from)}</span>{" "}
+                  <span className="font-semibold text-foreground">{formatInr(memberPrice!)}</span>{" "}
+                  <span className="text-2xs font-medium text-primary">{discountPct}% member</span>
+                </>
+              ) : (
+                <>
+                  From <span className="font-semibold text-foreground">{formatInr(from)}</span>
+                </>
+              )
             ) : (
               "On request"
             )}
