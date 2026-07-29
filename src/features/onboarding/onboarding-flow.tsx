@@ -14,7 +14,9 @@ import { cities, studios, siteConfig } from "@/config/site";
 import { industries } from "@/features/startups/constants";
 import { indianDistricts } from "@/config/india-districts";
 import { useAppStore, useAppHydrated } from "@/lib/store/app-store";
+import { toast } from "sonner";
 import { onboardingSteps, stages } from "./steps";
+import { persistProfile, persistStartup } from "./persist";
 import { HandleField, checkHandle, type HandleState } from "./handle-field";
 import { LivePreview } from "./live-preview";
 
@@ -127,15 +129,29 @@ function Flow() {
   };
 
   const saveProfileStep = () => {
+    const cf = cityFields();
     saveProfile({
       fullName: fullName.trim(),
       headline: headline.trim(),
-      ...cityFields(),
+      ...cf,
       bio: profile?.bio ?? "",
       avatarUrl: profile?.avatarUrl ?? "",
     });
     if (handle && handle !== profile?.handle) setHandle(handle);
     setStep(FOCUS);
+
+    persistProfile({
+      full_name: fullName.trim(),
+      headline: headline.trim(),
+      handle,
+      city_slug: cf.citySlug,
+      location: cf.location,
+    }).catch((e) => {
+      console.error("[onboarding] profile save failed", e);
+      if (e?.code === "23505") {
+        toast.error("That link is already taken — you can change it later in settings.");
+      }
+    });
   };
 
   const saveFocusStep = () => {
@@ -149,6 +165,10 @@ function Flow() {
       avatarUrl: profile?.avatarUrl ?? "",
     });
     setStep(COMPANY);
+
+    persistProfile({ needs, stage }).catch((e) =>
+      console.error("[onboarding] needs/stage save failed", e),
+    );
   };
 
   const finish = (saveCompany: boolean) => {
@@ -163,6 +183,12 @@ function Flow() {
         description: companyBio.trim(),
         logoUrl: logoUrl.trim(),
       });
+      persistStartup({
+        name: companyName.trim(),
+        about: companyBio.trim(),
+        logoUrl: logoUrl.trim(),
+        industry: validIndustry,
+      }).catch((e) => console.error("[onboarding] startup save failed", e));
     }
     completeOnboarding();
     setStep(DONE);
