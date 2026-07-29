@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,11 +9,16 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAppStore } from "@/lib/store/app-store";
+import { useCan } from "@/lib/authz/use-can";
+import { Upgrade } from "@/components/authz/upgrade";
 import { authorFromProfile, nid } from "./feed-utils";
 import { postTypes, postTypeOrder } from "./post-types";
 import type { PostContent, PostType } from "./schema";
 
 const QUICK: PostType[] = ["photo", "ytVideo", "poll", "quote", "achievement"];
+
+/** Rich post kinds gated behind `post.richKinds` (Network+). See docs/FEATURES.md. */
+const RICH_KINDS: PostType[] = ["poll", "quiz", "video", "ytVideo"];
 
 function isComplete(c: PostContent): boolean {
   switch (c.kind) {
@@ -32,9 +38,12 @@ export function PostComposer() {
   const profile = useAppStore((s) => s.profile);
   const addPost = useAppStore((s) => s.addPost);
   const author = authorFromProfile(profile);
+  const canRich = useCan("post.richKinds");
+  const isLocked = (k: PostType) => !canRich && RICH_KINDS.includes(k);
 
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<PostContent>(postTypes.text.blank());
+  const locked = isLocked(draft.kind);
 
   const launch = (kind: PostType) => {
     setDraft(postTypes[kind].blank());
@@ -71,7 +80,7 @@ export function PostComposer() {
             const Icon = postTypes[k].icon;
             return (
               <Button key={k} variant="ghost" size="sm" className="gap-1.5 text-muted-foreground" onClick={() => launch(k)}>
-                <Icon className="size-4" />
+                {isLocked(k) ? <Lock className="size-3.5" /> : <Icon className="size-4" />}
                 {postTypes[k].label}
               </Button>
             );
@@ -99,20 +108,29 @@ export function PostComposer() {
                     active ? "border-primary bg-accent text-accent-foreground" : "border-border text-muted-foreground hover:text-foreground",
                   )}
                 >
-                  <Icon className="size-3.5" />
+                  {isLocked(k) ? <Lock className="size-3.5" /> : <Icon className="size-3.5" />}
                   {postTypes[k].label}
                 </button>
               );
             })}
           </div>
 
-          <div className="space-y-3 overflow-y-auto">
-            <ComposerFields draft={draft} setDraft={setDraft} />
-          </div>
+          {locked ? (
+            <Upgrade capability="post.richKinds">
+              Polls, quizzes and video posts are a paid feature. Text, questions
+              and wins are always free.
+            </Upgrade>
+          ) : (
+            <>
+              <div className="space-y-3 overflow-y-auto">
+                <ComposerFields draft={draft} setDraft={setDraft} />
+              </div>
 
-          <div className="flex justify-end">
-            <Button onClick={submit} disabled={!isComplete(draft)}>Post</Button>
-          </div>
+              <div className="flex justify-end">
+                <Button onClick={submit} disabled={!isComplete(draft)}>Post</Button>
+              </div>
+            </>
+          )}
         </DialogContent>
       </Dialog>
     </>
