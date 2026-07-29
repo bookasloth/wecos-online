@@ -66,7 +66,7 @@ export default function PublicFounderPage() {
         <div className="mb-3 flex justify-end">
           <CopyLinkButton path={`/${handle}`} />
         </div>
-        <FounderProfile data={data} />
+        <FounderProfile data={data} isOwn={isOwn} />
       </Container>
     </section>
   );

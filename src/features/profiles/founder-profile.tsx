@@ -3,7 +3,6 @@ import {
   ArrowUpRight,
   BadgeCheck,
   MapPin,
-  MessageSquare,
   MessageCircle,
   Plus,
   Repeat2,
@@ -16,6 +15,7 @@ import {
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { MessageButton } from "./message-button";
 
 export type FounderExperience = {
   role: string;
@@ -106,7 +106,13 @@ function LogoTile({ text, className }: { text: string; className?: string }) {
   );
 }
 
-export function FounderProfile({ data }: { data: FounderProfileData }) {
+export function FounderProfile({
+  data,
+  isOwn = false,
+}: {
+  data: FounderProfileData;
+  isOwn?: boolean;
+}) {
   return (
     <div className="grid gap-4 lg:grid-cols-[1fr_320px] items-start">
       <div className="space-y-4">
@@ -138,10 +144,7 @@ export function FounderProfile({ data }: { data: FounderProfileData }) {
           <Plus className="size-3.5" />
           Connect
         </Link>
-        <Link href="/sign-up" className={cn(buttonVariants({ variant: "outline" }), "h-8 px-3 text-xs")}>
-          <MessageSquare className="size-3.5" />
-          Message
-        </Link>
+        <MessageButton targetName={data.name} isOwn={isOwn} />
         {data.links?.[0] && (
           <a
             href={data.links[0].href}
