@@ -1,15 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Building2, ExternalLink, Pencil } from "lucide-react";
+import { Building2, ExternalLink, Pencil, Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/app/dashboard-header";
 import { StartupDisplay } from "@/features/startups/startup-display";
+import { Upgrade } from "@/components/authz/upgrade";
+import { useCan } from "@/lib/authz/use-can";
 import { useAppStore } from "@/lib/store/app-store";
 
 export default function StartupViewPage() {
   const startup = useAppStore((s) => s.startup);
+  const canList = useCan("venture.list");
 
   if (!startup) {
     return (
@@ -59,6 +62,24 @@ export default function StartupViewPage() {
           </div>
         }
       />
+
+      {canList ? (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-border bg-card p-4 text-sm text-muted-foreground">
+          <Globe className="size-4 text-primary" />
+          Listed in the{" "}
+          <Link href="/startups" className="font-medium text-foreground underline-offset-2 hover:underline">
+            startup directory
+          </Link>
+          .
+        </div>
+      ) : (
+        <Upgrade capability="venture.list" title="Your page is unlisted" className="mb-6">
+          It&apos;s built and you can edit it, but it won&apos;t appear in the
+          public startup directory until you upgrade. Nothing is lost in the
+          meantime.
+        </Upgrade>
+      )}
+
       <StartupDisplay startup={startup} />
     </div>
   );
