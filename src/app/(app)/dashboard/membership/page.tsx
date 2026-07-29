@@ -14,8 +14,35 @@ import {
   tiers,
   tierById,
   type TierId,
+  type Tier,
 } from "@/config/site";
 import { useAppStore } from "@/lib/store/app-store";
+
+declare global {
+  interface Window {
+    Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+  }
+}
+
+/** Load Razorpay Checkout once, lazily. Resolves false if the script fails. */
+let razorpayScript: Promise<boolean> | null = null;
+function loadRazorpay(): Promise<boolean> {
+  if (typeof window === "undefined") return Promise.resolve(false);
+  if (window.Razorpay) return Promise.resolve(true);
+  if (!razorpayScript) {
+    razorpayScript = new Promise((resolve) => {
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = () => resolve(true);
+      s.onerror = () => {
+        razorpayScript = null;
+        resolve(false);
+      };
+      document.body.appendChild(s);
+    });
+  }
+  return razorpayScript;
+}
 
 /**
  * What each paid tier adds *over the one below it*. Listing the delta rather
@@ -54,11 +81,78 @@ const paidTiers = tiers.filter((t) => t.priceInr > 0);
 
 export default function MembershipPage() {
   const membership = useAppStore((s) => s.membership);
+  const profile = useAppStore((s) => s.profile);
   const activateMembership = useAppStore((s) => s.activateMembership);
   const cancelMembership = useAppStore((s) => s.cancelMembership);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [paying, setPaying] = useState<TierId | null>(null);
 
   const current = membership ? tierById(membership.tier) : tierById("free");
+
+  /** Razorpay Checkout for a tier: order → pay → server-verify → activate. */
+  const pay = async (tier: Tier) => {
+    setPaying(tier.id);
+    try {
+      const loaded = await loadRazorpay();
+      if (!loaded || !window.Razorpay) {
+        toast.error("Couldn't load checkout. Check your connection and retry.");
+        return;
+      }
+
+      const orderRes = await fetch("/api/razorpay/order", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tier: tier.id }),
+      });
+      if (!orderRes.ok) {
+        toast.error("Couldn't start payment. Try again.");
+        return;
+      }
+      const order = (await orderRes.json()) as {
+        orderId: string;
+        amount: number;
+        currency: string;
+        keyId: string;
+      };
+
+      const rzp = new window.Razorpay({
+        key: order.keyId,
+        order_id: order.orderId,
+        amount: order.amount,
+        currency: order.currency,
+        name: "WeCos",
+        description: `${tier.name} membership · 1 year`,
+        prefill: profile?.email
+          ? { email: profile.email, name: profile.fullName }
+          : undefined,
+        handler: async (resp: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            const verifyRes = await fetch("/api/razorpay/verify", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(resp),
+            });
+            const data = (await verifyRes.json()) as { ok?: boolean };
+            if (!verifyRes.ok || !data.ok) throw new Error("verify failed");
+          } catch {
+            toast.error(
+              "Payment couldn't be verified. If you were charged, contact support.",
+            );
+            return;
+          }
+          activateMembership(tier.id);
+          toast.success(`You're on ${tier.name}.`);
+        },
+      });
+      rzp.open();
+    } finally {
+      setPaying(null);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -189,11 +283,8 @@ export default function MembershipPage() {
 
                 <button
                   type="button"
-                  disabled={isCurrent}
-                  onClick={() => {
-                    activateMembership(tier.id);
-                    toast.success(`You're on ${tier.name}.`);
-                  }}
+                  disabled={isCurrent || paying !== null}
+                  onClick={() => pay(tier)}
                   className={cn(
                     buttonVariants({
                       variant: featured && !isCurrent ? "default" : "outline",
@@ -201,7 +292,11 @@ export default function MembershipPage() {
                     "mt-6 w-full",
                   )}
                 >
-                  {isCurrent ? "Current tier" : `Choose ${tier.name}`}
+                  {isCurrent
+                    ? "Current tier"
+                    : paying === tier.id
+                      ? "Opening checkout…"
+                      : `Choose ${tier.name}`}
                 </button>
               </div>
             );
@@ -209,8 +304,8 @@ export default function MembershipPage() {
         </div>
 
         <p className="mt-4 text-sm text-muted-foreground">
-          Demo build — no payment is taken. Razorpay checkout slots in here.
-          Founding seats are granted at Venture and above.
+          Razorpay checkout runs in test mode — use a test card, no real money is
+          charged. Founding seats are granted at Venture and above.
         </p>
       </section>
 
