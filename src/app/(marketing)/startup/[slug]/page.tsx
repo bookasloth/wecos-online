@@ -29,7 +29,12 @@ import {
   listingToCompanyData,
 } from "@/features/studios/catalog";
 
-/** Map a Supabase `startups` row into the shared company-page shape. */
+/**
+ * Map a Supabase `startups` row into the shared company-page shape. The basic
+ * columns fill the header/overview; the optional `details` JSONB carries the
+ * rich sections (products, funding, traction, team, updates, reviews…) and is
+ * merged over the base, so a startup can grow a full page without new columns.
+ */
 function rowToCompanyData(s: {
   slug: string;
   name: string;
@@ -41,9 +46,10 @@ function rowToCompanyData(s: {
   city: string | null;
   website: string | null;
   verified: boolean | null;
+  details: Partial<CompanyPageData> | null;
 }): CompanyPageData {
   const industry = s.topics?.[0];
-  return {
+  const base: CompanyPageData = {
     slug: s.slug,
     name: s.name,
     tagline: s.tagline || "A startup on WeCos",
@@ -63,6 +69,8 @@ function rowToCompanyData(s: {
       specialties: s.topics ?? undefined,
     },
   };
+  // details wins for anything it sets; slug/name/logoText stay from the row.
+  return { ...base, ...(s.details ?? {}), slug: base.slug, name: base.name, logoText: base.logoText };
 }
 
 export default function StartupPage() {
@@ -90,7 +98,7 @@ export default function StartupPage() {
       const { data, error } = await createClient()
         .from("startups")
         .select(
-          "slug,name,tagline,about,logo_url,topics,founded_year,city,website,verified",
+          "slug,name,tagline,about,logo_url,topics,founded_year,city,website,verified,details",
         )
         .eq("slug", slug)
         .eq("listed", true)
