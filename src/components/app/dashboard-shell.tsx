@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   Building2,
+  Inbox,
   LayoutDashboard,
   LogOut,
   Newspaper,
@@ -31,6 +32,7 @@ const nav = [
   { label: "Feed", href: "/feed", icon: Newspaper },
   { label: "Profile", href: "/dashboard/profile", icon: User },
   { label: "Startup", href: "/dashboard/startup", icon: Building2 },
+  { label: "Leads", href: "/dashboard/leads", icon: Inbox },
   { label: "Membership", href: "/dashboard/membership", icon: Sparkles },
 ];
 

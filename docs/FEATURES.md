@@ -92,7 +92,7 @@ surface, clearly labelled. See [prd/CRM_PRD.md](prd/CRM_PRD.md).
 | Discount on WeCos studio packages | — | 5% | 15% | 25% | ✅ tiered 5/15/25 |
 | Priority scheduling | — | — | — | ✓ | ❌ |
 | **List your business as a provider** | — | — | 1 category | 3 categories | ❌ |
-| Provider lead inbox | — | — | ✓ | ✓ | ❌ |
+| Provider lead inbox | — | — | ✓ | ✓ | 🟡 gated mock (`lead.view`) |
 | Lead unlocks included | — | — | 5/month | 15/month | ❌ |
 | Extra lead unlock | — | — | ₹250 | ₹150 | ❌ |
 | Placement in category | — | — | Standard | Featured | ❌ |
