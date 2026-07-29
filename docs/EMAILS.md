@@ -29,6 +29,7 @@ in the request.
 | 1 | New enquiry notification | A visitor submits an enquiry | live |
 | 2 | New document request | A visitor requests a document | live |
 | 3 | New member registration | A user signs up | planned |
+| 4 | Founder-call request | A Venture+ member requests a founder call (dashboard) | mock |
 
 ## Support
 
@@ -39,5 +40,5 @@ in the request.
 ## Totals
 
 - Members: 5 (5 live)
-- Admin: 3 (2 live, 1 planned)
+- Admin: 4 (2 live, 1 planned, 1 mock)
 - Support: 0

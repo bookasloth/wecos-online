@@ -1,17 +1,23 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
-import { ArrowRight, Building2, User } from "lucide-react";
+import { toast } from "sonner";
+import { ArrowRight, Building2, PhoneCall, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { studios, memberDiscountPct } from "@/config/site";
 import { MembershipCard } from "@/features/account/membership-card";
+import { Upgrade } from "@/components/authz/upgrade";
+import { useCan } from "@/lib/authz/use-can";
 import { useAppStore } from "@/lib/store/app-store";
 
 export default function DashboardPage() {
   const profile = useAppStore((s) => s.profile);
   const startup = useAppStore((s) => s.startup);
   const membership = useAppStore((s) => s.membership);
+  const canFounderCall = useCan("founderCall.request");
+  const [callRequested, setCallRequested] = useState(false);
   const firstName = (profile?.fullName ?? "Founder").split(" ")[0];
 
   return (
@@ -74,6 +80,39 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {canFounderCall ? (
+        <section className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-border bg-card p-6">
+          <div className="flex items-start gap-3">
+            <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-accent text-accent-foreground">
+              <PhoneCall className="size-5" />
+            </span>
+            <div>
+              <p className="font-medium">Call with the WeCos founder</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                One 1:1 call, included with your membership. Bring whatever
+                you&apos;re stuck on.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            disabled={callRequested}
+            onClick={() => {
+              setCallRequested(true);
+              toast.success("Request sent — we'll email you to schedule.");
+            }}
+            className={cn(buttonVariants({ size: "sm" }))}
+          >
+            {callRequested ? "Requested" : "Request a call"}
+          </button>
+        </section>
+      ) : (
+        <Upgrade capability="founderCall.request" title="A call with the WeCos founder">
+          Venture members get a 1:1 call with the WeCos founder in their first 90
+          days. Upgrade to unlock it.
+        </Upgrade>
+      )}
 
       <section className="rounded-xl border border-border bg-card">
         <div className="flex flex-wrap items-end justify-between gap-4 border-b border-border p-6">
