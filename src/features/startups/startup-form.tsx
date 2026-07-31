@@ -64,6 +64,8 @@ export function StartupForm({
         location: values.location,
         logoUrl: values.logoUrl,
         industry: values.industry,
+        foundedYear: values.foundedYear,
+        teamSize: values.teamSize,
       });
     } catch (err) {
       toast.error(
@@ -150,6 +152,27 @@ export function StartupForm({
         </Field>
         <Field label="Location" htmlFor="location" error={errors.location?.message}>
           <Input id="location" placeholder="Pune, India" {...register("location")} />
+        </Field>
+      </div>
+
+      <div className="grid gap-5 sm:grid-cols-2">
+        <Field label="Founded year" htmlFor="foundedYear" error={errors.foundedYear?.message}>
+          <Input
+            id="foundedYear"
+            type="number"
+            placeholder="2024"
+            {...register("foundedYear", {
+              setValueAs: (v) => (v === "" || v == null ? undefined : Number(v)),
+            })}
+          />
+        </Field>
+        <Field
+          label="Team size"
+          htmlFor="teamSize"
+          hint="e.g. 11–50 employees"
+          error={errors.teamSize?.message}
+        >
+          <Input id="teamSize" placeholder="11–50 employees" {...register("teamSize")} />
         </Field>
       </div>
 

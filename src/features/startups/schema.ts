@@ -25,6 +25,8 @@ export const startupSchema = z.object({
   location: optionalText(80),
   description: optionalText(2000),
   logoUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  foundedYear: z.number().int().min(1800).max(2100).optional(),
+  teamSize: optionalText(40),
 });
 
 export type StartupValues = z.infer<typeof startupSchema>;
@@ -48,6 +50,8 @@ export type StartupDetails = {
   reviews?: CompanyReview[];
   documents?: CompanyDocument[];
   socials?: CompanySocials;
+  /** Overview facts not backed by a base column (business type). */
+  overview?: { type?: string };
 };
 
 /**

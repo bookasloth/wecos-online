@@ -41,6 +41,7 @@ type ContentValues = {
   reviews: { client: string; company: string; rating: string; review: string; video: string }[];
   documents: { name: string }[];
   socials: { linkedin: string; instagram: string; facebook: string; twitter: string; youtube: string };
+  businessType: string;
 };
 
 function toDefaults(startup: Startup | null): ContentValues {
@@ -76,6 +77,7 @@ function toDefaults(startup: Startup | null): ContentValues {
       twitter: d?.socials?.twitter ?? "",
       youtube: d?.socials?.youtube ?? "",
     },
+    businessType: d?.overview?.type ?? "",
   };
 }
 
@@ -228,6 +230,9 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
     };
     const socials = Object.values(s).some(Boolean) ? s : undefined;
 
+    const bt = clean(values.businessType);
+    const overview = bt ? { type: bt } : undefined;
+
     const details = {
       people,
       products,
@@ -239,6 +244,7 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
       reviews,
       documents,
       socials,
+      overview,
     };
 
     saveStartupDetails(details); // instant local + offline fallback
@@ -364,6 +370,17 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
         >
           <Plus className="size-4" /> Add point
         </Button>
+      </section>
+
+      {/* Business type — shown under Quick Facts. */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold">Business type</h2>
+          <p className="text-sm text-muted-foreground">Shown in “Quick Facts”. Leave blank to hide.</p>
+        </div>
+        <Field label="Business type" htmlFor="businessType">
+          <Input id="businessType" placeholder="Private · B2B SaaS" {...register("businessType")} />
+        </Field>
       </section>
 
       {/* Funding — a flat block, hidden on the page when left blank. */}

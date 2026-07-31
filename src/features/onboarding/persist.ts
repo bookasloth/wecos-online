@@ -62,6 +62,8 @@ export async function persistStartup(fields: {
   location?: string;
   logoUrl?: string;
   industry?: string;
+  foundedYear?: number;
+  teamSize?: string;
 }) {
   if (!enabled()) return;
   const supabase = createClient();
@@ -80,6 +82,8 @@ export async function persistStartup(fields: {
     city: fields.location,
     logo_url: fields.logoUrl,
     topics: fields.industry ? [fields.industry] : undefined,
+    founded_year: fields.foundedYear,
+    team_size: fields.teamSize,
   };
   const patch = Object.fromEntries(
     Object.entries(optional).filter(([, v]) => v != null && v !== ""),

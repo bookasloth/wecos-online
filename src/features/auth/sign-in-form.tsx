@@ -57,7 +57,7 @@ export function SignInForm() {
       if (prof?.handle) {
         const { data: st } = await supabase
           .from("startups")
-          .select("id,slug,name,tagline,about,logo_url,website,city,topics")
+          .select("id,slug,name,tagline,about,logo_url,website,city,topics,founded_year,team_size,details")
           .eq("owner_id", userId)
           .maybeSingle();
 
@@ -85,6 +85,9 @@ export function SignInForm() {
                 industry: (industries as readonly string[]).includes(st.topics?.[0] ?? "")
                   ? (st.topics![0] as StartupValues["industry"])
                   : undefined,
+                foundedYear: st.founded_year ?? undefined,
+                teamSize: st.team_size ?? undefined,
+                details: st.details ?? undefined,
               }
             : null,
         });
