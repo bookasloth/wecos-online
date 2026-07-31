@@ -891,6 +891,8 @@ export function startupToCompanyData(
     leadership: founder
       ? [{ name: founder.fullName, role: "Founder", handle: founder.handle, avatarText: initials(founder.fullName) }]
       : undefined,
+    // Founder-edited rich sections (products/people/funding) win over the base.
+    ...(s.details ?? {}),
   };
 }
 

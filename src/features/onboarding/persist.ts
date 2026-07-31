@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/client";
+import type { StartupDetails } from "@/features/startups/schema";
 
 /**
  * Persists onboarding data to Supabase for the signed-in user. The profile row
@@ -95,6 +96,33 @@ export async function persistStartup(fields: {
     },
     { onConflict: "owner_id" },
   );
+  if (error) throw error;
+}
+
+/**
+ * Merges rich page content (products/people/funding) into the `details` JSONB.
+ * Reads current details first so editing one section never drops another (or
+ * keys this form doesn't manage yet, like traction/updates).
+ */
+export async function persistStartupDetails(patch: StartupDetails) {
+  if (!enabled()) return;
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+
+  const { data } = await supabase
+    .from("startups")
+    .select("details")
+    .eq("owner_id", user.id)
+    .maybeSingle();
+
+  const merged = { ...((data?.details as StartupDetails | null) ?? {}), ...patch };
+  const { error } = await supabase
+    .from("startups")
+    .update({ details: merged })
+    .eq("owner_id", user.id);
   if (error) throw error;
 }
 
