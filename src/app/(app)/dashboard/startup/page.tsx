@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Building2, ExternalLink, Pencil, Globe, LayoutList } from "lucide-react";
+import { Building2, ExternalLink, Pencil, Globe, LayoutList, BadgeCheck, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/app/dashboard-header";
@@ -105,6 +105,37 @@ export default function StartupViewPage() {
           meantime.
         </Upgrade>
       )}
+
+      {startup.serviceCategory ? (
+        <div className="mb-6 flex items-center gap-2 rounded-xl border border-border bg-card p-4 text-sm">
+          {startup.studioStatus === "approved" ? (
+            <>
+              <BadgeCheck className="size-4 text-primary" />
+              <span className="text-muted-foreground">
+                Approved &amp; listed in{" "}
+                <Link href="/studios" className="font-medium text-foreground underline-offset-2 hover:underline">
+                  Studios
+                </Link>
+                .
+              </span>
+            </>
+          ) : startup.studioStatus === "rejected" ? (
+            <>
+              <Clock className="size-4 text-muted-foreground" />
+              <span className="text-muted-foreground">
+                Your Studios listing application wasn&apos;t approved. Edit and re-apply anytime.
+              </span>
+            </>
+          ) : (
+            <>
+              <Clock className="size-4 text-warning" />
+              <span className="text-muted-foreground">
+                Studios listing — <span className="font-medium text-foreground">pending review</span>. We&apos;ll notify you once approved.
+              </span>
+            </>
+          )}
+        </div>
+      ) : null}
 
       <StartupDisplay startup={startup} />
     </div>

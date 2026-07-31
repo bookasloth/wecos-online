@@ -77,4 +77,6 @@ export type Startup = StartupValues & {
   lookingFor?: string;
   founderHandle?: string;
   details?: StartupDetails;
+  /** Studios listing application state: pending | approved | rejected. */
+  studioStatus?: "pending" | "approved" | "rejected";
 };

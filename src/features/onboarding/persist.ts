@@ -97,21 +97,29 @@ export async function persistStartup(fields: {
   // shares). Preserve the existing row's slug; only slugify a brand-new one.
   const { data: existing } = await supabase
     .from("startups")
-    .select("slug")
+    .select("slug,studio_status,service_category")
     .eq("owner_id", user.id)
     .maybeSingle();
   const slug = existing?.slug ?? slugify(fields.name);
 
-  // Provider listing is written explicitly (not drop-empty) so clearing the
-  // category un-lists the startup. Only touched when the form sends the field —
-  // onboarding omits it and leaves the columns at their defaults.
-  const provider =
-    fields.serviceCategory !== undefined
-      ? {
-          service_category: fields.serviceCategory || null,
-          offers_services: !!fields.serviceCategory,
-        }
-      : {};
+  // Studios listing is an application → admin-approval flow. Applying sets
+  // 'pending' and leaves offers_services false (admin approval flips it true).
+  // Guard: an already-approved provider re-saving the form (same category) is
+  // NOT reset to pending — only a fresh apply or a category change re-applies.
+  let provider: Record<string, unknown> = {};
+  if (fields.serviceCategory !== undefined) {
+    const cat = fields.serviceCategory || null;
+    if (!cat) {
+      provider = { service_category: null, studio_status: null, offers_services: false };
+    } else if (
+      existing?.studio_status === "approved" &&
+      existing?.service_category === cat
+    ) {
+      provider = {}; // already approved for this category — leave live
+    } else {
+      provider = { service_category: cat, studio_status: "pending", offers_services: false };
+    }
+  }
 
   const { error } = await supabase.from("startups").upsert(
     {
