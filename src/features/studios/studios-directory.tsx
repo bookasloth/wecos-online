@@ -27,8 +27,12 @@ export function StudiosDirectory() {
     };
   }, []);
 
-  // Real providers first, then the static WeCos studios / catalog.
-  const all = useMemo(() => [...providers, ...listings], [providers]);
+  // Real providers first; a static catalog entry with the same slug is dropped
+  // (the live DB row wins), then the rest of the WeCos studios / catalog.
+  const all = useMemo(() => {
+    const provSlugs = new Set(providers.map((p) => p.slug));
+    return [...providers, ...listings.filter((l) => !provSlugs.has(l.slug))];
+  }, [providers]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();

@@ -28,7 +28,9 @@ export function CategoryListings({
     };
   }, [category]);
 
-  const all = [...providers, ...staticItems];
+  // Real providers first; drop any static entry with the same slug (DB wins).
+  const provSlugs = new Set(providers.map((p) => p.slug));
+  const all = [...providers, ...staticItems.filter((l) => !provSlugs.has(l.slug))];
 
   return (
     <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
