@@ -880,6 +880,13 @@ export function startupToCompanyData(
     logoText: s.name.charAt(0).toUpperCase(),
     logoUrl: s.logoUrl || undefined,
     website: s.website || undefined,
+    leadership: founder
+      ? [{ name: founder.fullName, role: "Founder", handle: founder.handle, avatarText: initials(founder.fullName) }]
+      : undefined,
+    // Founder-edited rich sections (products/people/funding) win over the base.
+    ...(s.details ?? {}),
+    // overview merges base facts with any founder-set keys (e.g. business type),
+    // so details.overview never wipes founded/HQ/website. Placed after the spread.
     overview: {
       website: s.website || undefined,
       industry: s.industry,
@@ -887,10 +894,8 @@ export function startupToCompanyData(
       headquarters: s.location || undefined,
       founded: s.foundedYear ? String(s.foundedYear) : undefined,
       specialties: s.tags,
+      ...(s.details?.overview ?? {}),
     },
-    leadership: founder
-      ? [{ name: founder.fullName, role: "Founder", handle: founder.handle, avatarText: initials(founder.fullName) }]
-      : undefined,
   };
 }
 

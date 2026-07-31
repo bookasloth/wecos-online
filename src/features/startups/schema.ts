@@ -1,5 +1,17 @@
 import { z } from "zod";
 import { industries, stages } from "./constants";
+import type {
+  CompanyProduct,
+  CompanyPerson,
+  CompanyFunding,
+  CompanyUpdate,
+  CompanyJob,
+  CompanyStat,
+  CompanyTraction,
+  CompanyReview,
+  CompanyDocument,
+  CompanySocials,
+} from "@/features/startups/company-page";
 
 const optionalText = (max: number) =>
   z.string().trim().max(max).optional().or(z.literal(""));
@@ -13,12 +25,34 @@ export const startupSchema = z.object({
   location: optionalText(80),
   description: optionalText(2000),
   logoUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
+  foundedYear: z.number().int().min(1800).max(2100).optional(),
+  teamSize: optionalText(40),
 });
 
 export type StartupValues = z.infer<typeof startupSchema>;
 
 export type Milestone = { date: string; text: string };
 export type StartupLink = { label: string; href: string };
+
+/**
+ * Rich page content, stored in the `startups.details` JSONB and merged over the
+ * base columns on the public page. Phase 2 lets founders edit these three
+ * sections; other CompanyPageData keys (traction, updates, jobs…) come later.
+ */
+export type StartupDetails = {
+  products?: CompanyProduct[];
+  people?: CompanyPerson[];
+  funding?: CompanyFunding;
+  updates?: CompanyUpdate[];
+  jobs?: CompanyJob[];
+  stats?: CompanyStat[];
+  traction?: CompanyTraction;
+  reviews?: CompanyReview[];
+  documents?: CompanyDocument[];
+  socials?: CompanySocials;
+  /** Overview facts not backed by a base column (business type). */
+  overview?: { type?: string };
+};
 
 /**
  * Persisted startup (a `space` of type 'studio') = form values + system fields.
@@ -36,4 +70,5 @@ export type Startup = StartupValues & {
   milestones?: Milestone[];
   lookingFor?: string;
   founderHandle?: string;
+  details?: StartupDetails;
 };

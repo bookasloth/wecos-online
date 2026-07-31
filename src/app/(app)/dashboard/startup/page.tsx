@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { Building2, ExternalLink, Pencil, Globe } from "lucide-react";
+import { Building2, ExternalLink, Pencil, Globe, LayoutList } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { DashboardHeader } from "@/components/app/dashboard-header";
@@ -70,6 +70,13 @@ export default function StartupViewPage() {
             >
               <ExternalLink className="size-4" />
               View public page
+            </Link>
+            <Link
+              href="/dashboard/startup/content"
+              className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
+            >
+              <LayoutList className="size-4" />
+              Edit content
             </Link>
             <Link
               href="/dashboard/startup/edit"

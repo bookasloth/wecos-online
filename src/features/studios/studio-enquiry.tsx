@@ -42,7 +42,9 @@ export function StudioEnquiry({
   const [mounted, setMounted] = useState(false);
   const [step, setStep] = useState(0);
 
-  // Portal target is only available after mount (client).
+  // Portal target is only available after mount (client). Setting a mount flag
+  // in an empty-dep effect is the intended SSR guard here, not a render loop.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setMounted(true), []);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);

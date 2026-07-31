@@ -4,7 +4,7 @@ import { useSyncExternalStore } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Profile, ProfileValues } from "@/features/profiles/schema";
-import type { Startup, StartupValues } from "@/features/startups/schema";
+import type { Startup, StartupValues, StartupDetails } from "@/features/startups/schema";
 import type { FeedPost, PostContent, Vote } from "@/features/feed/schema";
 import { nid, authorFromProfile, applyVote } from "@/features/feed/feed-utils";
 import { sampleFeed } from "@/lib/sample/sample-feed";
@@ -111,6 +111,8 @@ type AppState = {
   /** Claim a vanity handle. Caller must validate with `isValidHandle` first. */
   setHandle: (handle: string) => void;
   saveStartup: (values: StartupValues) => void;
+  /** Merge rich page content (products/people/funding) into the startup. */
+  saveStartupDetails: (details: StartupDetails) => void;
   completeOnboarding: () => void;
 };
 
@@ -316,6 +318,18 @@ export const useAppStore = create<AppState>()(
             ? { ...state.startup, ...values }
             : { id: uid(), slug: slugify(values.name), ...values },
         })),
+
+      saveStartupDetails: (details) =>
+        set((state) =>
+          state.startup
+            ? {
+                startup: {
+                  ...state.startup,
+                  details: { ...state.startup.details, ...details },
+                },
+              }
+            : state,
+        ),
 
       completeOnboarding: () => set({ onboarded: true }),
     }),

@@ -70,7 +70,17 @@ function rowToCompanyData(s: {
     },
   };
   // details wins for anything it sets; slug/name/logoText stay from the row.
-  return { ...base, ...(s.details ?? {}), slug: base.slug, name: base.name, logoText: base.logoText };
+  // overview is merged (not replaced) so founder-set keys like business type
+  // don't drop the base facts (founded, HQ, website…).
+  const d = s.details ?? {};
+  return {
+    ...base,
+    ...d,
+    slug: base.slug,
+    name: base.name,
+    logoText: base.logoText,
+    overview: { ...base.overview, ...(d.overview ?? {}) },
+  };
 }
 
 export default function StartupPage() {

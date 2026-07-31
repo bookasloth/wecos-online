@@ -65,6 +65,14 @@ export type CompanyTraction = {
   points: { label: string; value: number }[];
 };
 export type CompanyPerson = { name: string; role: string; handle?: string; avatarText: string;image?: string; bio?: string;};
+export type CompanyDocument = { name: string };
+export type CompanySocials = {
+  linkedin?: string;
+  instagram?: string;
+  facebook?: string;
+  twitter?: string;
+  youtube?: string;
+};
 export type CompanyPageData = {
   slug: string;
   name: string;
@@ -103,6 +111,8 @@ export type CompanyPageData = {
   alsoViewed?: { name: string; slug: string; industry: string; logoText: string }[];
   links?: CompanyLink[];
   reviews?: CompanyReview[];
+  documents?: CompanyDocument[];
+  socials?: CompanySocials;
 };
 
 const compact = (n?: number) =>
@@ -217,6 +227,8 @@ useEffect(() => {
   jobs: !!data.jobs?.length,
   people: !!data.people?.length,
   reviews: !!data.reviews?.length,
+  documents: !!data.documents?.length,
+  socials: !!(data.socials && Object.values(data.socials).some(Boolean)),
 };
 
 // Order matches the on-page scroll order so the scrollspy highlight moves
@@ -669,10 +681,12 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
               <p className="text-sm leading-relaxed text-foreground/90">
                 {p.text}
               </p>
-              <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-                <span>{compact(p.likes)} likes</span>
-                <span>{compact(p.comments)} comments</span>
-              </div>
+              {p.likes || p.comments ? (
+                <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                  <span>{compact(p.likes)} likes</span>
+                  <span>{compact(p.comments)} comments</span>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
@@ -852,6 +866,7 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
   </div>
 </Card>      
 {/*Documents */}
+{show.documents && (
 <Card className="p-5 sm:p-6">
   <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
     <div>
@@ -863,33 +878,16 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
   </div>
 
   <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-    {[
-      {
-        name: "Company Profile",
-        color: "from-destructive/20 to-destructive/10",
-        text: "text-destructive",
-      },
-      {
-        name: "Brochure",
-        color: "from-orange-500/20 to-orange-500/10",
-        text: "text-orange-500",
-      },
-      {
-        name: "Pitch Deck",
-        color: "from-warning/20 to-warning/10",
-        text: "text-warning",
-      },
-      {
-        name: "Catalogue",
-        color: "from-info/20 to-info/10",
-        text: "text-info",
-      },
-      {
-        name: "Rate Card",
-        color: "from-success/20 to-success/10",
-        text: "text-success",
-      },
-    ].map((doc) => (
+    {data.documents!.map((d, di) => {
+      const palette = [
+        { color: "from-destructive/20 to-destructive/10", text: "text-destructive" },
+        { color: "from-orange-500/20 to-orange-500/10", text: "text-orange-500" },
+        { color: "from-warning/20 to-warning/10", text: "text-warning" },
+        { color: "from-info/20 to-info/10", text: "text-info" },
+        { color: "from-success/20 to-success/10", text: "text-success" },
+      ];
+      const doc = { name: d.name, ...palette[di % palette.length] };
+      return (
       <div
         key={doc.name}
         className="
@@ -938,11 +936,13 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
           PDF Document
         </p>
 
-        
+
       </div>
-    ))}
+      );
+    })}
   </div>
 </Card>
+)}
 {/* Reviews */}
 {show.reviews && (
   <Card id="reviews" className="scroll-mt-28 p-5 sm:p-6">
@@ -1034,48 +1034,38 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
       </a>
     </div>
   </div>
+  {show.socials && (
   <div className="mt-6 border-t pt-5">
  <p className="mb-3 text-sm font-semibold text-foreground">
     Social Presence
   </p>
 
   <div className="flex flex-wrap gap-2">
-    <a
-      href="#"
-      className="grid size-10 place-items-center rounded-xl bg-[#0A66C2]/10 text-[#0A66C2] transition hover:scale-105"
-    >
-      <FaLinkedinIn className="text-base" />
-    </a>
-
-    <a
-      href="#"
-      className="grid size-10 place-items-center rounded-xl bg-pink-500/10 text-pink-500 transition hover:scale-105"
-    >
-      <FaInstagram className="text-base" />
-    </a>
-
-    <a
-      href="#"
-      className="grid size-10 place-items-center rounded-xl bg-info/10 text-info transition hover:scale-105"
-    >
-      <FaFacebookF className="text-base" />
-    </a>
-
-    <a
-      href="#"
-      className="grid size-10 place-items-center rounded-xl bg-muted text-foreground transition hover:scale-105"
-    >
-      <FaXTwitter className="text-base" />
-    </a>
-
-    <a
-      href="#"
-      className="grid size-10 place-items-center rounded-xl bg-destructive/10 text-destructive transition hover:scale-105"
-    >
-      <FaYoutube className="text-base" />
-    </a>
+    {([
+      { key: "linkedin", cls: "bg-[#0A66C2]/10 text-[#0A66C2]", Icon: FaLinkedinIn },
+      { key: "instagram", cls: "bg-pink-500/10 text-pink-500", Icon: FaInstagram },
+      { key: "facebook", cls: "bg-info/10 text-info", Icon: FaFacebookF },
+      { key: "twitter", cls: "bg-muted text-foreground", Icon: FaXTwitter },
+      { key: "youtube", cls: "bg-destructive/10 text-destructive", Icon: FaYoutube },
+    ] as const)
+      .filter((s) => data.socials?.[s.key])
+      .map((s) => (
+        <a
+          key={s.key}
+          href={data.socials![s.key]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            "grid size-10 place-items-center rounded-xl transition hover:scale-105",
+            s.cls,
+          )}
+        >
+          <s.Icon className="text-base" />
+        </a>
+      ))}
   </div>
 </div>
+  )}
 </div>
   </Card>
 
