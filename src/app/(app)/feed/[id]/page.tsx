@@ -1,6 +1,6 @@
-import { SinglePostView } from "@/features/feed/single-post-view";
+import { redirect } from "next/navigation";
 
-export default async function FeedPostPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  return <SinglePostView id={id} />;
+// The feed isn't live yet — individual post links route back to the coming-soon.
+export default function FeedPostPage() {
+  redirect("/feed");
 }
