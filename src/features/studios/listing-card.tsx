@@ -124,6 +124,8 @@ export function ListingCard({ listing }: { listing: Listing }) {
           </p>
           <StudioEnquiry
             studioName={listing.name}
+            companySlug={listing.slug}
+            category={listing.category}
             label="Enquire now"
             className="h-9 px-5 text-sm font-bold"
           />

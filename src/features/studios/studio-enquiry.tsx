@@ -20,18 +20,27 @@ import { useAppStore } from "@/lib/store/app-store";
 
 const BUDGETS = ["Under ₹25k / mo", "₹25k–50k / mo", "₹50k–1L / mo", "₹1L+ / mo", "Not sure yet"];
 const TIMELINES = ["Start now", "Within a month", "Just exploring"];
+// Parallel to BUDGETS/TIMELINES by index — map the picked label to the DB enum.
+const BUDGET_CODES = ["under_25k", "25k_50k", "50k_1l", "1l_plus", "not_sure"];
+const TIMELINE_CODES = ["now", "within_month", "exploring"];
 
 const emailOk = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
 
 export function StudioEnquiry({
   studioName,
   packageName,
+  companySlug,
+  category,
   label = "Talk to the studio",
   variant = "default",
   className,
 }: {
   studioName: string;
   packageName?: string;
+  /** Target startup slug — the route resolves its service category server-side. */
+  companySlug?: string;
+  /** Fallback category when there's no Supabase startup (e.g. a catalog listing). */
+  category?: string;
   label?: string;
   variant?: "default" | "outline" | "ghost" | "link";
   className?: string;
@@ -114,6 +123,12 @@ export function StudioEnquiry({
           message: need.trim(),
           budget,
           timeline,
+          // Lead routing — labels above are for the email; codes drive the lead.
+          companySlug,
+          category,
+          packageName,
+          budgetCode: budget ? BUDGET_CODES[BUDGETS.indexOf(budget)] : undefined,
+          timelineCode: timeline ? TIMELINE_CODES[TIMELINES.indexOf(timeline)] : undefined,
         }),
       });
       if (!res.ok) throw new Error("Enquiry failed");
