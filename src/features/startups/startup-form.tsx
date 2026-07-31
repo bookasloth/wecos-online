@@ -244,9 +244,9 @@ export function StartupForm({
       </Field>
 
       <Field
-        label="List in Studios"
+        label="Apply for a Studios listing"
         htmlFor="serviceCategory"
-        hint="Offer services to other founders? Pick a category to appear in the Studios directory. Leave blank if you don't."
+        hint="Offer services to founders? Pick one category to apply. Our team reviews and approves listings before they appear in the Studios directory."
         error={errors.serviceCategory?.message}
       >
         <select id="serviceCategory" className={selectClass} {...register("serviceCategory")}>
