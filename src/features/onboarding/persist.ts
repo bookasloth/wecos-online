@@ -55,7 +55,10 @@ export async function persistProfile(fields: {
 
 export async function persistStartup(fields: {
   name: string;
+  tagline?: string;
   about?: string;
+  website?: string;
+  location?: string;
   logoUrl?: string;
   industry?: string;
 }) {
@@ -66,16 +69,60 @@ export async function persistStartup(fields: {
   } = await supabase.auth.getUser();
   if (!user) return;
 
+  // Only write the columns the form actually filled, so re-saving the basic
+  // form never blanks rich fields set elsewhere (e.g. multi-value topics).
+  // Upsert leaves omitted columns untouched on conflict.
+  const optional: Record<string, unknown> = {
+    tagline: fields.tagline,
+    about: fields.about,
+    website: fields.website,
+    city: fields.location,
+    logo_url: fields.logoUrl,
+    topics: fields.industry ? [fields.industry] : undefined,
+  };
+  const patch = Object.fromEntries(
+    Object.entries(optional).filter(([, v]) => v != null && v !== ""),
+  );
+
   const { error } = await supabase.from("startups").upsert(
     {
       owner_id: user.id,
       name: fields.name,
+      // ponytail: slug follows the name. Renaming a listed startup changes its
+      // public URL — freeze the slug once listed when the rename flow lands.
       slug: slugify(fields.name),
-      about: fields.about || null,
-      logo_url: fields.logoUrl || null,
-      topics: fields.industry ? [fields.industry] : [],
+      ...patch,
     },
     { onConflict: "owner_id" },
   );
   if (error) throw error;
+}
+
+/** Public bucket for startup images (logo, later cover/gallery). */
+const STARTUP_BUCKET = "startup-assets";
+
+/**
+ * Uploads a startup image to Supabase Storage under the owner's folder and
+ * returns its public URL. RLS restricts writes to `{uid}/…` (see the
+ * startup-assets bucket migration).
+ */
+export async function uploadStartupImage(
+  file: File,
+  kind: "logo" | "cover" = "logo",
+): Promise<string> {
+  if (!enabled()) throw new Error("Uploads aren’t available yet");
+  const supabase = createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Sign in to upload");
+
+  const ext = (file.name.split(".").pop() || "png").toLowerCase();
+  const path = `${user.id}/${kind}-${Date.now()}.${ext}`;
+  const { error } = await supabase.storage
+    .from(STARTUP_BUCKET)
+    .upload(path, file, { cacheControl: "3600", upsert: true });
+  if (error) throw error;
+
+  return supabase.storage.from(STARTUP_BUCKET).getPublicUrl(path).data.publicUrl;
 }

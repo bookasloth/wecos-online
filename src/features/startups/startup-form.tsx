@@ -1,11 +1,14 @@
 "use client";
 
+import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
+import { Loader2, Upload } from "lucide-react";
 import { startupSchema, type StartupValues } from "@/features/startups/schema";
 import { industries, stages } from "@/features/startups/constants";
 import { useAppStore } from "@/lib/store/app-store";
+import { persistStartup, uploadStartupImage } from "@/features/onboarding/persist";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -30,6 +33,8 @@ export function StartupForm({
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<StartupValues>({
     resolver: zodResolver(startupSchema),
@@ -44,10 +49,54 @@ export function StartupForm({
     },
   });
 
-  const onSubmit = (values: StartupValues) => {
-    saveStartup(values);
+  const logoUrl = watch("logoUrl");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  const onSubmit = async (values: StartupValues) => {
+    saveStartup(values); // instant local update + offline fallback
+    try {
+      await persistStartup({
+        name: values.name,
+        tagline: values.tagline,
+        about: values.description,
+        website: values.website,
+        location: values.location,
+        logoUrl: values.logoUrl,
+        industry: values.industry,
+      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? `Couldn’t sync: ${err.message}` : "Couldn’t sync to server",
+      );
+      return;
+    }
     toast.success("Startup page saved");
     onSaved?.();
+  };
+
+  const onPickLogo = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // allow re-picking the same file
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Choose an image file");
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error("Logo must be under 2 MB");
+      return;
+    }
+    setUploading(true);
+    try {
+      const url = await uploadStartupImage(file, "logo");
+      setValue("logoUrl", url, { shouldValidate: true, shouldDirty: true });
+      toast.success("Logo uploaded");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -113,12 +162,59 @@ export function StartupForm({
         />
       </Field>
       <Field
-        label="Logo URL"
+        label="Logo"
         htmlFor="logoUrl"
-        hint="Logo upload arrives with the backend phase"
+        hint="Upload a square image (PNG/JPG, under 2 MB), or paste a URL below"
         error={errors.logoUrl?.message}
       >
-        <Input id="logoUrl" placeholder="https://…" {...register("logoUrl")} />
+        <div className="flex items-center gap-4">
+          <span className="grid size-16 shrink-0 place-items-center overflow-hidden rounded-xl border border-border bg-muted text-xs text-muted-foreground">
+            {logoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={logoUrl} alt="Logo preview" className="size-full object-cover" />
+            ) : (
+              "No logo"
+            )}
+          </span>
+          <div className="flex flex-col gap-2">
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onPickLogo}
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploading}
+              onClick={() => fileRef.current?.click()}
+            >
+              {uploading ? (
+                <Loader2 className="size-4 animate-spin" />
+              ) : (
+                <Upload className="size-4" />
+              )}
+              {uploading ? "Uploading…" : "Upload logo"}
+            </Button>
+            {logoUrl ? (
+              <button
+                type="button"
+                onClick={() => setValue("logoUrl", "", { shouldDirty: true })}
+                className="text-left text-xs text-muted-foreground underline-offset-2 hover:underline"
+              >
+                Remove
+              </button>
+            ) : null}
+          </div>
+        </div>
+        <Input
+          id="logoUrl"
+          placeholder="https://… (optional)"
+          className="mt-3"
+          {...register("logoUrl")}
+        />
       </Field>
 
       <Button type="submit" disabled={isSubmitting} className="h-10">

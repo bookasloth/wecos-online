@@ -6,6 +6,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { signInSchema, type SignInValues } from "@/features/auth/schema";
+import { industries } from "@/features/startups/constants";
+import type { StartupValues } from "@/features/startups/schema";
 import { useAppStore } from "@/lib/store/app-store";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/form/field";
@@ -55,7 +57,7 @@ export function SignInForm() {
       if (prof?.handle) {
         const { data: st } = await supabase
           .from("startups")
-          .select("id,slug,name,about,logo_url,website,city,topics")
+          .select("id,slug,name,tagline,about,logo_url,website,city,topics")
           .eq("owner_id", userId)
           .maybeSingle();
 
@@ -75,10 +77,14 @@ export function SignInForm() {
                 id: st.id,
                 slug: st.slug,
                 name: st.name,
+                tagline: st.tagline ?? "",
                 description: st.about ?? "",
                 logoUrl: st.logo_url ?? "",
                 website: st.website ?? "",
                 location: st.city ?? "",
+                industry: (industries as readonly string[]).includes(st.topics?.[0] ?? "")
+                  ? (st.topics![0] as StartupValues["industry"])
+                  : undefined,
               }
             : null,
         });
