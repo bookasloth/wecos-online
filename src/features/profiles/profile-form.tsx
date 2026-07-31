@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
 import { profileSchema, type ProfileValues } from "@/features/profiles/schema";
 import { useAppStore } from "@/lib/store/app-store";
+import { persistProfile } from "@/features/onboarding/persist";
 import { Field } from "@/components/form/field";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,8 +37,22 @@ export function ProfileForm({
     },
   });
 
-  const onSubmit = (values: ProfileValues) => {
-    saveProfile(values);
+  const onSubmit = async (values: ProfileValues) => {
+    saveProfile(values); // instant local update + offline fallback
+    try {
+      await persistProfile({
+        full_name: values.fullName,
+        headline: values.headline,
+        location: values.location,
+        bio: values.bio,
+        avatar_url: values.avatarUrl,
+      });
+    } catch (err) {
+      toast.error(
+        err instanceof Error ? `Couldn’t sync: ${err.message}` : "Couldn’t sync to server",
+      );
+      return;
+    }
     toast.success("Profile saved");
     onSaved?.();
   };

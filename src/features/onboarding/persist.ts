@@ -34,6 +34,8 @@ export async function persistProfile(fields: {
   location?: string;
   needs?: string[];
   stage?: string;
+  bio?: string;
+  avatar_url?: string;
 }) {
   if (!enabled()) return;
   const supabase = createClient();
