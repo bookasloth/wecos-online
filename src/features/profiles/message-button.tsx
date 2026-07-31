@@ -18,8 +18,9 @@ import { useCan } from "@/lib/authz/use-can";
  * `targetPaid` defaults to true: everyone shown in the founder directory is a
  * paid member. Pass false for a free member so free↔free messaging stays open.
  *
- * ⚠️ MOCK: sending is a toast placeholder — there is no message backend yet.
- * The gate is UI-only; the real check moves server-side with the messages table.
+ * Messaging isn't live yet: an allowed click shows a coming-soon notice instead
+ * of sending. The free→paid upgrade gate is real product logic and stays; the
+ * real send + server-side check arrive with the messages table.
  */
 export function MessageButton({
   targetName,
@@ -60,7 +61,9 @@ export function MessageButton({
         onClick={() =>
           mustUpgrade
             ? setShowUpgrade(true)
-            : toast.success(`Message sent to ${targetName}. (demo)`)
+            : toast("Direct messaging is coming soon.", {
+                description: `You'll be able to reach ${targetName} here soon.`,
+              })
         }
       >
         {mustUpgrade ? <Lock className="size-3.5" /> : <MessageSquare className="size-3.5" />}
