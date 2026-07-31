@@ -27,6 +27,12 @@ export const startupSchema = z.object({
   logoUrl: z.string().url("Enter a valid URL").optional().or(z.literal("")),
   foundedYear: z.number().int().min(1800).max(2100).optional(),
   teamSize: optionalText(40),
+  // Studios provider listing: pick a category to list as a service provider
+  // (sets offers_services + service_category); empty = not a provider.
+  serviceCategory: z
+    .enum(["marketing", "hr", "finance", "legal", "capital-circle", "technology"])
+    .optional()
+    .or(z.literal("")),
 });
 
 export type StartupValues = z.infer<typeof startupSchema>;
