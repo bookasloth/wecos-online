@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { signInSchema, type SignInValues } from "@/features/auth/schema";
 import { industries } from "@/features/startups/constants";
 import type { StartupValues } from "@/features/startups/schema";
+import { tierById, type TierId } from "@/config/site";
 import { useAppStore } from "@/lib/store/app-store";
 import { createClient } from "@/lib/supabase/client";
 import { Field } from "@/components/form/field";
@@ -61,6 +62,22 @@ export function SignInForm() {
           .eq("owner_id", userId)
           .maybeSingle();
 
+        const { data: mem } = await supabase
+          .from("memberships")
+          .select("tier,status,current_period_start,current_period_end")
+          .eq("user_id", userId)
+          .maybeSingle();
+        const membership =
+          mem && mem.status === "active" && mem.tier !== "free"
+            ? {
+                tier: mem.tier as TierId,
+                status: "active" as const,
+                startedAt: mem.current_period_start ?? "",
+                renewsAt: mem.current_period_end ?? "",
+                pricePaidInr: tierById(mem.tier as TierId).priceInr,
+              }
+            : null;
+
         hydrateFromRemote({
           profile: {
             id: prof.id,
@@ -90,6 +107,7 @@ export function SignInForm() {
                 details: st.details ?? undefined,
               }
             : null,
+          membership,
         });
       } else {
         destination = "/onboarding";

@@ -105,6 +105,7 @@ type AppState = {
   hydrateFromRemote: (input: {
     profile: Profile;
     startup: Startup | null;
+    membership: Membership | null;
   }) => void;
   signOut: () => void;
   saveProfile: (values: ProfileValues) => void;
@@ -278,10 +279,13 @@ export const useAppStore = create<AppState>()(
         }
       },
 
-      hydrateFromRemote: ({ profile, startup }) =>
+      hydrateFromRemote: ({ profile, startup, membership }) =>
         set((state) => ({
           profile,
           startup: startup ?? state.startup,
+          // DB is authoritative for the tier: this overwrites any locally-forged
+          // membership at sign-in. null = free.
+          membership: membership ?? null,
           onboarded: true,
           session: state.session
             ? { ...state.session, fullName: profile.fullName }
