@@ -66,6 +66,7 @@ export async function persistStartup(fields: {
   industry?: string;
   foundedYear?: number;
   teamSize?: string;
+  serviceCategory?: string;
 }) {
   if (!enabled()) return;
   const supabase = createClient();
@@ -101,12 +102,24 @@ export async function persistStartup(fields: {
     .maybeSingle();
   const slug = existing?.slug ?? slugify(fields.name);
 
+  // Provider listing is written explicitly (not drop-empty) so clearing the
+  // category un-lists the startup. Only touched when the form sends the field —
+  // onboarding omits it and leaves the columns at their defaults.
+  const provider =
+    fields.serviceCategory !== undefined
+      ? {
+          service_category: fields.serviceCategory || null,
+          offers_services: !!fields.serviceCategory,
+        }
+      : {};
+
   const { error } = await supabase.from("startups").upsert(
     {
       owner_id: user.id,
       name: fields.name,
       slug,
       ...patch,
+      ...provider,
     },
     { onConflict: "owner_id" },
   );

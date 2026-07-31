@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { Loader2, Upload } from "lucide-react";
 import { startupSchema, type StartupValues } from "@/features/startups/schema";
 import { industries, stages } from "@/features/startups/constants";
+import { categories } from "@/features/studios/catalog";
 import { useAppStore } from "@/lib/store/app-store";
 import { persistStartup, uploadStartupImage } from "@/features/onboarding/persist";
 import { Field } from "@/components/form/field";
@@ -45,6 +46,7 @@ export function StartupForm({
       location: "",
       description: "",
       logoUrl: "",
+      serviceCategory: "",
       ...defaultValues,
     },
   });
@@ -66,6 +68,7 @@ export function StartupForm({
         industry: values.industry,
         foundedYear: values.foundedYear,
         teamSize: values.teamSize,
+        serviceCategory: values.serviceCategory,
       });
     } catch (err) {
       toast.error(
@@ -238,6 +241,22 @@ export function StartupForm({
           className="mt-3"
           {...register("logoUrl")}
         />
+      </Field>
+
+      <Field
+        label="List in Studios"
+        htmlFor="serviceCategory"
+        hint="Offer services to other founders? Pick a category to appear in the Studios directory. Leave blank if you don't."
+        error={errors.serviceCategory?.message}
+      >
+        <select id="serviceCategory" className={selectClass} {...register("serviceCategory")}>
+          <option value="">Not a service provider</option>
+          {categories.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.label}
+            </option>
+          ))}
+        </select>
       </Field>
 
       <Button type="submit" disabled={isSubmitting} className="h-10">
