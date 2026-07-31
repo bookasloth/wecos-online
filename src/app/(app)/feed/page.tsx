@@ -1,5 +1,5 @@
-import { FeedView } from "@/features/feed/feed-view";
+import { FeedComingSoon } from "@/features/feed/feed-coming-soon";
 
 export default function FeedPage() {
-  return <FeedView />;
+  return <FeedComingSoon />;
 }
