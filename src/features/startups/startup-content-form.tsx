@@ -1,6 +1,13 @@
 "use client";
 
-import { useForm, useFieldArray } from "react-hook-form";
+import {
+  useForm,
+  useFieldArray,
+  type Control,
+  type UseFormRegister,
+  type Path,
+  type FieldArrayPath,
+} from "react-hook-form";
 import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import type { Startup } from "@/features/startups/schema";
@@ -20,32 +27,31 @@ const initials = (name: string) =>
     .map((w) => w[0]?.toUpperCase() ?? "")
     .join("") || "?";
 
-// Only the fields the public startup page actually renders — collecting more
-// would silently drop on save and mislead the founder.
-type PersonRow = { name: string; role: string; image: string };
-type ProductRow = { name: string; description: string };
-
+// Form-side row shapes hold only the fields the public page renders — collecting
+// more would silently drop on save and mislead the founder. Everything is a
+// string in the form; onSubmit coerces (numbers, initials, engagement zeros).
 type ContentValues = {
-  people: PersonRow[];
-  products: ProductRow[];
+  people: { name: string; role: string; image: string }[];
+  products: { name: string; description: string }[];
+  updates: { text: string }[];
+  jobs: { title: string; location: string; type: string }[];
+  stats: { label: string; value: string }[];
+  traction: { title: string; points: { label: string; value: string }[] };
   funding: { totalRaised: string; valuation: string; lastRound: string; investors: string };
 };
-
-const emptyPerson: PersonRow = { name: "", role: "", image: "" };
-const emptyProduct: ProductRow = { name: "", description: "" };
 
 function toDefaults(startup: Startup | null): ContentValues {
   const d = startup?.details;
   return {
-    people: (d?.people ?? []).map((p) => ({
-      name: p.name,
-      role: p.role,
-      image: p.image ?? "",
-    })),
-    products: (d?.products ?? []).map((p) => ({
-      name: p.name,
-      description: p.description ?? "",
-    })),
+    people: (d?.people ?? []).map((p) => ({ name: p.name, role: p.role, image: p.image ?? "" })),
+    products: (d?.products ?? []).map((p) => ({ name: p.name, description: p.description ?? "" })),
+    updates: (d?.updates ?? []).map((u) => ({ text: u.text })),
+    jobs: (d?.jobs ?? []).map((j) => ({ title: j.title, location: j.location, type: j.type })),
+    stats: (d?.stats ?? []).map((s) => ({ label: s.label, value: s.value })),
+    traction: {
+      title: d?.traction?.title ?? "",
+      points: (d?.traction?.points ?? []).map((p) => ({ label: p.label, value: String(p.value) })),
+    },
     funding: {
       totalRaised: d?.funding?.totalRaised ?? "",
       valuation: d?.funding?.valuation ?? "",
@@ -61,6 +67,65 @@ const clean = (v: string) => {
   return t === "" ? undefined : t;
 };
 
+type Col = { key: string; label: string; placeholder?: string; hint?: string; textarea?: boolean; required?: boolean };
+
+/**
+ * Generic repeatable-row editor for a details array (team, services, updates,
+ * jobs, stats). Each column is a plain text/textarea field; the parent owns the
+ * shape and the save-time mapping.
+ */
+function RowList({
+  control,
+  register,
+  name,
+  heading,
+  description,
+  addLabel,
+  columns,
+  empty,
+}: {
+  control: Control<ContentValues>;
+  register: UseFormRegister<ContentValues>;
+  name: FieldArrayPath<ContentValues>;
+  heading: string;
+  description: string;
+  addLabel: string;
+  columns: Col[];
+  empty: Record<string, string>;
+}) {
+  const fa = useFieldArray({ control, name });
+  return (
+    <section className="space-y-4">
+      <div>
+        <h2 className="text-base font-semibold">{heading}</h2>
+        <p className="text-sm text-muted-foreground">{description}</p>
+      </div>
+      {fa.fields.map((f, i) => (
+        <div key={f.id} className="space-y-3 rounded-xl border border-border p-4">
+          {columns.map((c) => {
+            const path = `${name}.${i}.${c.key}` as Path<ContentValues>;
+            return (
+              <Field key={c.key} label={c.label} htmlFor={path} required={c.required} hint={c.hint}>
+                {c.textarea ? (
+                  <Textarea id={path} rows={2} placeholder={c.placeholder} {...register(path)} />
+                ) : (
+                  <Input id={path} placeholder={c.placeholder} {...register(path)} />
+                )}
+              </Field>
+            );
+          })}
+          <Button type="button" variant="ghost" size="sm" onClick={() => fa.remove(i)}>
+            <Trash2 className="size-4" /> Remove
+          </Button>
+        </div>
+      ))}
+      <Button type="button" variant="outline" size="sm" onClick={() => fa.append(empty as never)}>
+        <Plus className="size-4" /> {addLabel}
+      </Button>
+    </section>
+  );
+}
+
 export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
   const startup = useAppStore((s) => s.startup);
   const saveStartupDetails = useAppStore((s) => s.saveStartupDetails);
@@ -72,12 +137,11 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
     formState: { isSubmitting },
   } = useForm<ContentValues>({ defaultValues: toDefaults(startup) });
 
-  const people = useFieldArray({ control, name: "people" });
-  const products = useFieldArray({ control, name: "products" });
+  const tractionPoints = useFieldArray({ control, name: "traction.points" });
 
   const onSubmit = async (values: ContentValues) => {
-    // Only rows with a name are real; the rest are blank leftovers.
-    const peopleOut = values.people
+    // Only rows with the anchor field filled are real; drop blank leftovers.
+    const people = values.people
       .filter((p) => p.name.trim())
       .map((p) => ({
         name: p.name.trim(),
@@ -86,12 +150,30 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
         image: clean(p.image),
       }));
 
-    const productsOut = values.products
+    const products = values.products
       .filter((p) => p.name.trim())
-      .map((p) => ({
-        name: p.name.trim(),
-        description: clean(p.description),
-      }));
+      .map((p) => ({ name: p.name.trim(), description: clean(p.description) }));
+
+    // Founder-authored updates have no engagement yet — the template shows the
+    // likes/comments line only when non-zero (see company-page).
+    const updates = values.updates
+      .filter((u) => u.text.trim())
+      .map((u) => ({ text: u.text.trim(), date: "", likes: 0, comments: 0 }));
+
+    const jobs = values.jobs
+      .filter((j) => j.title.trim())
+      .map((j) => ({ title: j.title.trim(), location: j.location.trim(), type: j.type.trim() }));
+
+    const stats = values.stats
+      .filter((s) => s.label.trim() && s.value.trim())
+      .map((s) => ({ label: s.label.trim(), value: s.value.trim() }));
+
+    const points = values.traction.points
+      .filter((p) => p.label.trim() && p.value.trim())
+      .map((p) => ({ label: p.label.trim(), value: Number(p.value) || 0 }));
+    const traction = points.length
+      ? { title: values.traction.title.trim() || "Growth", points }
+      : undefined;
 
     const investors = values.funding.investors
       .split(",")
@@ -106,8 +188,12 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
     const hasFunding = Object.values(funding).some((v) => v != null);
 
     const details = {
-      people: peopleOut,
-      products: productsOut,
+      people,
+      products,
+      updates,
+      jobs,
+      stats,
+      traction,
       funding: hasFunding ? funding : undefined,
     };
 
@@ -126,62 +212,117 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-10">
-      {/* Team */}
+      <RowList
+        control={control}
+        register={register}
+        name="people"
+        heading="Team"
+        description="The people behind your startup. Shown in “Our Team”."
+        addLabel="Add team member"
+        empty={{ name: "", role: "", image: "" }}
+        columns={[
+          { key: "name", label: "Name", placeholder: "Asha Rao", required: true },
+          { key: "role", label: "Role", placeholder: "Co-founder & CTO" },
+          { key: "image", label: "Photo URL", placeholder: "https://…", hint: "Optional square headshot" },
+        ]}
+      />
+
+      <RowList
+        control={control}
+        register={register}
+        name="products"
+        heading="Services & products"
+        description="What you offer. Shown in “Our Services”."
+        addLabel="Add service"
+        empty={{ name: "", description: "" }}
+        columns={[
+          { key: "name", label: "Name", placeholder: "Brand strategy sprint", required: true },
+          { key: "description", label: "Description", placeholder: "What it is and who it’s for.", textarea: true },
+        ]}
+      />
+
+      <RowList
+        control={control}
+        register={register}
+        name="updates"
+        heading="Recent updates"
+        description="Short posts about progress. Shown in “Recent Updates”."
+        addLabel="Add update"
+        empty={{ text: "" }}
+        columns={[
+          { key: "text", label: "Update", placeholder: "Shipped v2, crossed 1,000 users…", textarea: true, required: true },
+        ]}
+      />
+
+      <RowList
+        control={control}
+        register={register}
+        name="jobs"
+        heading="Open roles"
+        description="Roles you’re hiring for. Shown in “Open Roles”."
+        addLabel="Add role"
+        empty={{ title: "", location: "", type: "" }}
+        columns={[
+          { key: "title", label: "Title", placeholder: "Founding engineer", required: true },
+          { key: "location", label: "Location", placeholder: "Pune / Remote" },
+          { key: "type", label: "Type", placeholder: "Full-time" },
+        ]}
+      />
+
+      <RowList
+        control={control}
+        register={register}
+        name="stats"
+        heading="Stats"
+        description="Headline numbers. Shown as tiles under “Track record”."
+        addLabel="Add stat"
+        empty={{ label: "", value: "" }}
+        columns={[
+          { key: "value", label: "Value", placeholder: "12,000", required: true },
+          { key: "label", label: "Label", placeholder: "Active users", required: true },
+        ]}
+      />
+
+      {/* Traction — a titled growth chart with numeric points. */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-base font-semibold">Team</h2>
+          <h2 className="text-base font-semibold">Traction</h2>
           <p className="text-sm text-muted-foreground">
-            The people behind your startup. Shown in “Our Team”.
+            A growth chart under “Track record”. Add at least two points; leave empty to hide.
           </p>
         </div>
-        {people.fields.map((f, i) => (
-          <div key={f.id} className="space-y-3 rounded-xl border border-border p-4">
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Name" htmlFor={`people.${i}.name`} required>
-                <Input id={`people.${i}.name`} placeholder="Asha Rao" {...register(`people.${i}.name`)} />
-              </Field>
-              <Field label="Role" htmlFor={`people.${i}.role`}>
-                <Input id={`people.${i}.role`} placeholder="Co-founder & CTO" {...register(`people.${i}.role`)} />
-              </Field>
-            </div>
-            <Field label="Photo URL" htmlFor={`people.${i}.image`} hint="Optional square headshot">
-              <Input id={`people.${i}.image`} placeholder="https://…" {...register(`people.${i}.image`)} />
+        <Field label="Chart title" htmlFor="traction.title">
+          <Input id="traction.title" placeholder="Monthly revenue" {...register("traction.title")} />
+        </Field>
+        {tractionPoints.fields.map((f, i) => (
+          <div key={f.id} className="flex items-end gap-3 rounded-xl border border-border p-4">
+            <Field label="Point" htmlFor={`traction.points.${i}.label`} className="flex-1">
+              <Input id={`traction.points.${i}.label`} placeholder="Jan" {...register(`traction.points.${i}.label`)} />
             </Field>
-            <Button type="button" variant="ghost" size="sm" onClick={() => people.remove(i)}>
-              <Trash2 className="size-4" /> Remove
+            <Field label="Value" htmlFor={`traction.points.${i}.value`} className="flex-1">
+              <Input
+                id={`traction.points.${i}.value`}
+                type="number"
+                placeholder="120"
+                {...register(`traction.points.${i}.value`)}
+              />
+            </Field>
+            <Button type="button" variant="ghost" size="sm" onClick={() => tractionPoints.remove(i)}>
+              <Trash2 className="size-4" />
             </Button>
           </div>
         ))}
-        <Button type="button" variant="outline" size="sm" onClick={() => people.append(emptyPerson)}>
-          <Plus className="size-4" /> Add team member
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => tractionPoints.append({ label: "", value: "" })}
+        >
+          <Plus className="size-4" /> Add point
         </Button>
       </section>
 
-      {/* Services / Products */}
-      <section className="space-y-4">
-        <div>
-          <h2 className="text-base font-semibold">Services &amp; products</h2>
-          <p className="text-sm text-muted-foreground">What you offer. Shown in “Our Services”.</p>
-        </div>
-        {products.fields.map((f, i) => (
-          <div key={f.id} className="space-y-3 rounded-xl border border-border p-4">
-            <Field label="Name" htmlFor={`products.${i}.name`} required>
-              <Input id={`products.${i}.name`} placeholder="Brand strategy sprint" {...register(`products.${i}.name`)} />
-            </Field>
-            <Field label="Description" htmlFor={`products.${i}.description`}>
-              <Textarea id={`products.${i}.description`} rows={2} placeholder="What it is and who it’s for." {...register(`products.${i}.description`)} />
-            </Field>
-            <Button type="button" variant="ghost" size="sm" onClick={() => products.remove(i)}>
-              <Trash2 className="size-4" /> Remove
-            </Button>
-          </div>
-        ))}
-        <Button type="button" variant="outline" size="sm" onClick={() => products.append(emptyProduct)}>
-          <Plus className="size-4" /> Add service
-        </Button>
-      </section>
-
-      {/* Funding */}
+      {/* Funding — a flat block, hidden on the page when left blank. */}
       <section className="space-y-4">
         <div>
           <h2 className="text-base font-semibold">Funding</h2>

@@ -4,6 +4,10 @@ import type {
   CompanyProduct,
   CompanyPerson,
   CompanyFunding,
+  CompanyUpdate,
+  CompanyJob,
+  CompanyStat,
+  CompanyTraction,
 } from "@/features/startups/company-page";
 
 const optionalText = (max: number) =>
@@ -34,6 +38,10 @@ export type StartupDetails = {
   products?: CompanyProduct[];
   people?: CompanyPerson[];
   funding?: CompanyFunding;
+  updates?: CompanyUpdate[];
+  jobs?: CompanyJob[];
+  stats?: CompanyStat[];
+  traction?: CompanyTraction;
 };
 
 /**

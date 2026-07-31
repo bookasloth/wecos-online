@@ -669,10 +669,12 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
               <p className="text-sm leading-relaxed text-foreground/90">
                 {p.text}
               </p>
-              <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
-                <span>{compact(p.likes)} likes</span>
-                <span>{compact(p.comments)} comments</span>
-              </div>
+              {p.likes || p.comments ? (
+                <div className="mt-2 flex gap-4 text-xs text-muted-foreground">
+                  <span>{compact(p.likes)} likes</span>
+                  <span>{compact(p.comments)} comments</span>
+                </div>
+              ) : null}
             </li>
           ))}
         </ul>
