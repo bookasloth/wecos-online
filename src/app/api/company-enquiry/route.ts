@@ -2,6 +2,22 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { enquiryDocuments, siteConfig } from "@/config/site";
 import { sendEmail, renderEmail, emailTokens } from "@/lib/email";
+import { createAdminClient } from "@/lib/supabase/admin";
+
+const STUDIO_CATEGORIES = [
+  "marketing",
+  "hr",
+  "finance",
+  "legal",
+  "capital-circle",
+  "technology",
+] as const;
+const BUDGET_CODES = ["under_25k", "25k_50k", "50k_1l", "1l_plus", "not_sure"] as const;
+const TIMELINE_CODES = ["now", "within_month", "exploring"] as const;
+
+const leadsEnabled = () =>
+  !!process.env.NEXT_PUBLIC_SUPABASE_URL &&
+  !!(process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY);
 
 /**
  * Escapes a value before it is interpolated into email HTML.
@@ -40,6 +56,13 @@ const enquirySchema = z.discriminatedUnion("type", [
     message: z.string().trim().max(2000).optional(),
     budget: z.string().trim().max(60).optional(),
     timeline: z.string().trim().max(60).optional(),
+    // Lead routing (all optional — email still works without them):
+    companySlug: z.string().trim().max(80).optional(),
+    category: z.enum(STUDIO_CATEGORIES).optional(),
+    packageName: z.string().trim().max(120).optional(),
+    city: z.string().trim().max(80).optional(),
+    budgetCode: z.enum(BUDGET_CODES).optional(),
+    timelineCode: z.enum(TIMELINE_CODES).optional(),
   }),
   z.object({
     type: z.literal("document"),
@@ -195,6 +218,46 @@ export async function POST(req: Request) {
           })
         : enquiryEmailHtml({ companyName: data.companyName }),
     });
+
+    // Route the enquiry into the leads table so providers in the category see it
+    // (masked, via lead_previews). Best-effort: a failure here must not fail the
+    // enquiry — the email already went out. Category is resolved server-side from
+    // the target startup when a slug is given, so the client can't spoof it.
+    if (enq && leadsEnabled()) {
+      try {
+        const admin = createAdminClient();
+        let category: string | null = enq.category ?? null;
+        let targetStartupId: string | null = null;
+        if (enq.companySlug) {
+          const { data: s } = await admin
+            .from("startups")
+            .select("id,service_category,offers_services")
+            .eq("slug", enq.companySlug)
+            .maybeSingle();
+          if (s?.offers_services && s.service_category) {
+            targetStartupId = s.id;
+            category = s.service_category;
+          }
+        }
+        if (category) {
+          await admin.from("leads").insert({
+            target_startup_id: targetStartupId,
+            category,
+            target_package: enq.packageName ?? null,
+            city: enq.city ?? null,
+            buyer_name: enq.name ?? null,
+            buyer_email: enq.userEmail,
+            buyer_phone: enq.phone ?? null,
+            message: enq.message ?? null,
+            budget: enq.budgetCode ?? null,
+            timeline: enq.timelineCode ?? null,
+            source: "enquiry",
+          });
+        }
+      } catch (leadErr) {
+        console.error("[company-enquiry] lead routing failed", leadErr);
+      }
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

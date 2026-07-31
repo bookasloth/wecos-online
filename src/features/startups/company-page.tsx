@@ -396,6 +396,7 @@ className="group relative w-[180px] overflow-hidden rounded-2xl border border-bo
     <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
 <StudioEnquiry
   studioName={data.name}
+  companySlug={data.slug}
   label="Enquire Now"
   className="w-full rounded-xl px-8 shadow-lg sm:w-auto"
 />
@@ -494,6 +495,7 @@ className="inline-flex w-full items-center justify-center gap-2 rounded-xl borde
                 <div className="mt-5 flex items-center justify-end">
 <StudioEnquiry
   studioName={data.name}
+  companySlug={data.slug}
   packageName={p.name}
   label="Enquire"
   variant="link"
@@ -1076,7 +1078,7 @@ className="flex flex-col gap-3 py-3 first:pt-0 sm:flex-row sm:items-center sm:ju
       working day.
     </p>
 
-    <StudioEnquiry studioName={data.name} label="Contact" className="mt-5 w-full" />
+    <StudioEnquiry studioName={data.name} companySlug={data.slug} label="Contact" className="mt-5 w-full" />
 
     <a
       href="https://www.bookasloth.com"
