@@ -38,6 +38,9 @@ type ContentValues = {
   stats: { label: string; value: string }[];
   traction: { title: string; points: { label: string; value: string }[] };
   funding: { totalRaised: string; valuation: string; lastRound: string; investors: string };
+  reviews: { client: string; company: string; rating: string; review: string; video: string }[];
+  documents: { name: string }[];
+  socials: { linkedin: string; instagram: string; facebook: string; twitter: string; youtube: string };
 };
 
 function toDefaults(startup: Startup | null): ContentValues {
@@ -58,6 +61,21 @@ function toDefaults(startup: Startup | null): ContentValues {
       lastRound: d?.funding?.lastRound ?? "",
       investors: (d?.funding?.investors ?? []).join(", "),
     },
+    reviews: (d?.reviews ?? []).map((r) => ({
+      client: r.client,
+      company: r.company,
+      rating: String(r.rating),
+      review: r.review,
+      video: r.video ?? "",
+    })),
+    documents: (d?.documents ?? []).map((doc) => ({ name: doc.name })),
+    socials: {
+      linkedin: d?.socials?.linkedin ?? "",
+      instagram: d?.socials?.instagram ?? "",
+      facebook: d?.socials?.facebook ?? "",
+      twitter: d?.socials?.twitter ?? "",
+      youtube: d?.socials?.youtube ?? "",
+    },
   };
 }
 
@@ -67,7 +85,7 @@ const clean = (v: string) => {
   return t === "" ? undefined : t;
 };
 
-type Col = { key: string; label: string; placeholder?: string; hint?: string; textarea?: boolean; required?: boolean };
+type Col = { key: string; label: string; placeholder?: string; hint?: string; textarea?: boolean; required?: boolean; type?: string };
 
 /**
  * Generic repeatable-row editor for a details array (team, services, updates,
@@ -109,7 +127,7 @@ function RowList({
                 {c.textarea ? (
                   <Textarea id={path} rows={2} placeholder={c.placeholder} {...register(path)} />
                 ) : (
-                  <Input id={path} placeholder={c.placeholder} {...register(path)} />
+                  <Input id={path} type={c.type} placeholder={c.placeholder} {...register(path)} />
                 )}
               </Field>
             );
@@ -187,6 +205,29 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
     };
     const hasFunding = Object.values(funding).some((v) => v != null);
 
+    const reviews = values.reviews
+      .filter((r) => r.client.trim() && r.review.trim())
+      .map((r) => ({
+        client: r.client.trim(),
+        company: r.company.trim(),
+        rating: Math.min(5, Math.max(1, Number(r.rating) || 5)),
+        review: r.review.trim(),
+        video: clean(r.video),
+      }));
+
+    const documents = values.documents
+      .filter((d) => d.name.trim())
+      .map((d) => ({ name: d.name.trim() }));
+
+    const s = {
+      linkedin: clean(values.socials.linkedin),
+      instagram: clean(values.socials.instagram),
+      facebook: clean(values.socials.facebook),
+      twitter: clean(values.socials.twitter),
+      youtube: clean(values.socials.youtube),
+    };
+    const socials = Object.values(s).some(Boolean) ? s : undefined;
+
     const details = {
       people,
       products,
@@ -195,6 +236,9 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
       stats,
       traction,
       funding: hasFunding ? funding : undefined,
+      reviews,
+      documents,
+      socials,
     };
 
     saveStartupDetails(details); // instant local + offline fallback
@@ -342,6 +386,61 @@ export function StartupContentForm({ onSaved }: { onSaved?: () => void }) {
         <Field label="Investors" htmlFor="funding.investors" hint="Comma-separated">
           <Input id="funding.investors" placeholder="Accel, Blume, angels" {...register("funding.investors")} />
         </Field>
+      </section>
+
+      <RowList
+        control={control}
+        register={register}
+        name="reviews"
+        heading="Reviews & testimonials"
+        description="Client quotes. Shown in “Reviews & Testimonials”."
+        addLabel="Add review"
+        empty={{ client: "", company: "", rating: "5", review: "", video: "" }}
+        columns={[
+          { key: "client", label: "Client name", placeholder: "Sarah Chen", required: true },
+          { key: "company", label: "Company", placeholder: "Acme Inc." },
+          { key: "rating", label: "Rating (1–5)", placeholder: "5", type: "number" },
+          { key: "review", label: "Review", placeholder: "What they said…", textarea: true, required: true },
+          { key: "video", label: "Video URL", placeholder: "https://… (optional)", hint: "Plays in a popup" },
+        ]}
+      />
+
+      <RowList
+        control={control}
+        register={register}
+        name="documents"
+        heading="Documents"
+        description="Downloadable resources (pitch deck, brochure…). Shown in “Documents”; visitors enquire to access."
+        addLabel="Add document"
+        empty={{ name: "" }}
+        columns={[
+          { key: "name", label: "Name", placeholder: "Pitch Deck", required: true },
+        ]}
+      />
+
+      {/* Social profiles — links in the sidebar; hidden when all blank. */}
+      <section className="space-y-4">
+        <div>
+          <h2 className="text-base font-semibold">Social profiles</h2>
+          <p className="text-sm text-muted-foreground">Full URLs. Only the ones you fill appear.</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          <Field label="LinkedIn" htmlFor="socials.linkedin">
+            <Input id="socials.linkedin" placeholder="https://linkedin.com/company/…" {...register("socials.linkedin")} />
+          </Field>
+          <Field label="Instagram" htmlFor="socials.instagram">
+            <Input id="socials.instagram" placeholder="https://instagram.com/…" {...register("socials.instagram")} />
+          </Field>
+          <Field label="Facebook" htmlFor="socials.facebook">
+            <Input id="socials.facebook" placeholder="https://facebook.com/…" {...register("socials.facebook")} />
+          </Field>
+          <Field label="X (Twitter)" htmlFor="socials.twitter">
+            <Input id="socials.twitter" placeholder="https://x.com/…" {...register("socials.twitter")} />
+          </Field>
+          <Field label="YouTube" htmlFor="socials.youtube">
+            <Input id="socials.youtube" placeholder="https://youtube.com/@…" {...register("socials.youtube")} />
+          </Field>
+        </div>
       </section>
 
       <Button type="submit" disabled={isSubmitting} className="h-10">

@@ -8,6 +8,9 @@ import type {
   CompanyJob,
   CompanyStat,
   CompanyTraction,
+  CompanyReview,
+  CompanyDocument,
+  CompanySocials,
 } from "@/features/startups/company-page";
 
 const optionalText = (max: number) =>
@@ -42,6 +45,9 @@ export type StartupDetails = {
   jobs?: CompanyJob[];
   stats?: CompanyStat[];
   traction?: CompanyTraction;
+  reviews?: CompanyReview[];
+  documents?: CompanyDocument[];
+  socials?: CompanySocials;
 };
 
 /**
