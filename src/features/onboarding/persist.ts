@@ -89,13 +89,21 @@ export async function persistStartup(fields: {
     Object.entries(optional).filter(([, v]) => v != null && v !== ""),
   );
 
+  // Slug is minted once, at creation, and frozen thereafter — renaming must not
+  // change the public /startup/[slug] URL (breaks existing links, SEO, and any
+  // shares). Preserve the existing row's slug; only slugify a brand-new one.
+  const { data: existing } = await supabase
+    .from("startups")
+    .select("slug")
+    .eq("owner_id", user.id)
+    .maybeSingle();
+  const slug = existing?.slug ?? slugify(fields.name);
+
   const { error } = await supabase.from("startups").upsert(
     {
       owner_id: user.id,
       name: fields.name,
-      // ponytail: slug follows the name. Renaming a listed startup changes its
-      // public URL — freeze the slug once listed when the rename flow lands.
-      slug: slugify(fields.name),
+      slug,
       ...patch,
     },
     { onConflict: "owner_id" },
