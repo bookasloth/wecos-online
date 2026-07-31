@@ -1,23 +1,38 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
-import { accent, categories, listings } from "./catalog";
+import { accent, categories, listings, type Listing } from "./catalog";
+import { fetchProviderListings } from "./providers";
 import { ListingCard } from "./listing-card";
 
 /**
- * The /studios directory: search + category chips over the full listing set.
- * Client-side filter — the catalog is small and static, so no server round-trip.
+ * The /studios directory: search + category chips over WeCos's first-party
+ * studios plus real opted-in provider startups from Supabase.
  */
 export function StudiosDirectory() {
   const [query, setQuery] = useState("");
   const [active, setActive] = useState<string>("all");
+  const [providers, setProviders] = useState<Listing[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    fetchProviderListings()
+      .then((p) => active && setProviders(p))
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  // Real providers first, then the static WeCos studios / catalog.
+  const all = useMemo(() => [...providers, ...listings], [providers]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return listings.filter((l) => {
+    return all.filter((l) => {
       if (active !== "all" && l.category !== active) return false;
       if (!q) return true;
       return (
@@ -26,7 +41,7 @@ export function StudiosDirectory() {
         (l.city?.toLowerCase().includes(q) ?? false)
       );
     });
-  }, [query, active]);
+  }, [query, active, all]);
 
   return (
     <div>

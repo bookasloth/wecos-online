@@ -12,7 +12,7 @@ import {
   categoryBySlug,
   listingsByCategory,
 } from "@/features/studios/catalog";
-import { ListingCard } from "@/features/studios/listing-card";
+import { CategoryListings } from "@/features/studios/category-listings";
 
 export function generateStaticParams() {
   return categories.map((c) => ({ category: c.slug }));
@@ -66,11 +66,7 @@ export default async function CategoryPage({
       </Container>
 
       <Container className="pb-16 sm:pb-20">
-        <ul className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {items.map((l) => (
-            <ListingCard key={l.slug} listing={l} />
-          ))}
-        </ul>
+        <CategoryListings category={cat.slug} staticItems={items} />
 
         <div className="mt-10 rounded-xl border border-dashed border-border p-6 text-sm text-muted-foreground">
           Run a {cat.label.toLowerCase()} business?{" "}
